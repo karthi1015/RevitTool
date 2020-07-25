@@ -27,7 +27,6 @@ namespace Tool_CheckUpdateModel.Data
             BuiltInCategory.OST_StructuralFraming,
             BuiltInCategory.OST_Floors,
             BuiltInCategory.OST_Walls
-            
         };
 
         public static string Path = @"C:\Users\" + Environment.UserName + "\\AppData\\Roaming\\Pentacons\\CheckUpdate";

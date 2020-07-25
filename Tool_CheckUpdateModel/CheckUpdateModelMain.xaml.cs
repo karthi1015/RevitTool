@@ -86,42 +86,6 @@ namespace Tool_CheckUpdateModel
         #endregion
 
         //----------------------------------------------------------------------------------------------------------------------------------------
-        #region Funtion Toolbar
-        private void Quit(object sender, RoutedEventArgs e)
-        {
-            Close();
-        }
-
-        private void Maximize(object sender, RoutedEventArgs e)
-        {
-            WindowState state_maximize = this.WindowState;
-            if (state_maximize == WindowState.Normal)
-            {
-                this.WindowState = WindowState.Maximized;
-                max.ToolTip = "Normal";
-            }
-            else if (state_maximize == WindowState.Maximized)
-            {
-                this.WindowState = WindowState.Normal;
-                max.ToolTip = "Maximize";
-            }
-        }
-
-        private void Minimize(object sender, RoutedEventArgs e)
-        {
-            this.WindowState = WindowState.Minimized;
-        }
-
-        private void Drag(object sender, MouseButtonEventArgs e)
-        {
-            if (e.LeftButton == MouseButtonState.Pressed)
-            {
-                DragMove();
-            }
-        }
-        #endregion
-
-        //----------------------------------------------------------------------------------------------------------------------------------------
         #region Khai báo ObservableCollection
         ObservableCollection<Element_Change> my_element_change;
         ObservableCollection<Parameter_Settings> my_parameter_settings;
@@ -225,7 +189,7 @@ namespace Tool_CheckUpdateModel
                         folder.Description = MessageBox_Data.folder_save_check;
                         if (folder.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                         {
-                            string name = Path.GetFileName(file.FileName).Split('.')[0] + "_" + DateTime.Now.ToString("ddMMyy");
+                            string name = Path.GetFileName(file.FileName).Split('.')[0] + "_" + DateTime.Now.ToString("ddMMyyHHmmss");
 
                             string path_directory = folder.SelectedPath + "\\" + name;
 

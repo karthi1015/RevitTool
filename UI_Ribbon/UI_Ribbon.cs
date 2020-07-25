@@ -149,13 +149,13 @@ namespace UI_Ribbon
 
         //------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         //Create a push button to trigger a command add it to the ribbon panel.
-        //string tabName = "Pentacons";
-        //string pathDll = @"\\192.168.1.250\data\DataBases\01 RevitDataBases\04 Add_in\01 Revit_API\DLL\";
-        //string pathImage = @"\\192.168.1.250\data\DataBases\01 RevitDataBases\04 Add_in\01 Revit_API\Resources\Image\";
+        string tabName = "Pentacons";
+        string pathDll = @"\\192.168.1.250\data\DataBases\01 RevitDataBases\04 Add_in\01 Revit_API\DLL\";
+        string pathImage = @"\\192.168.1.250\data\DataBases\01 RevitDataBases\04 Add_in\01 Revit_API\Resources\Image\";
 
-        string tabName = "W";
-        string pathDll = @"D:\00 CuaKhanh\03 Revit\00 Ribbon_Mr.W\DLL\";
-        string pathImage = @"D:\00 CuaKhanh\03 Revit\00 Ribbon_Mr.W\Image\";
+        //string tabName = "W";
+        //string pathDll = @"D:\00 CuaKhanh\03 Revit\00 Ribbon_Mr.W\DLL\";
+        //string pathImage = @"D:\00 CuaKhanh\03 Revit\00 Ribbon_Mr.W\Image\";
         public void AddRibbonPanel(UIControlledApplication application, string addin)
         {
             //add danh sách addin

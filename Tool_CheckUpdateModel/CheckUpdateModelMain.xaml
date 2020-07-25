@@ -15,14 +15,10 @@
     MaxWidth="1920"
     Background="{DynamicResource MaterialDesignPaper}"
     TextElement.Foreground="{DynamicResource MaterialDesignBody}"
-    WindowStyle="None"
-    ResizeMode="CanResizeWithGrip" 
     WindowStartupLocation="CenterScreen"
     SizeToContent="WidthAndHeight"
-    MouseDown="Drag"
-    AllowsTransparency="True"
-    BorderBrush="Aqua"
-    BorderThickness="1"
+    Title="Model Change"
+    Icon="\\192.168.1.250\data\DataBases\01 RevitDataBases\04 Add_in\01 Revit_API\Resources\Image\Logo\Logo_32x32.ico"
     >
     <Window.Resources>
         <ResourceDictionary>
@@ -239,178 +235,131 @@
 
         <!--Data-->
         <Grid Grid.Column="1">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="70"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
-            <Grid Grid.Row="0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="100"/>
-                </Grid.ColumnDefinitions>
-                <StackPanel Grid.Column="0"
+            <StackPanel Grid.Column="0"
                             Orientation="Horizontal"
-                            VerticalAlignment="Stretch"
+                            VerticalAlignment="Top"
                             HorizontalAlignment="Left"
                             Margin="10 5 5 5">
-                    <ComboBox
-                        MinWidth="100"
+                <ComboBox
+                        MinWidth="300"
                         Name="link_file"
                         materialDesign:HintAssist.Hint="Link file"
                         Style="{StaticResource MaterialDesignFloatingHintComboBox}"
                         DropDownOpened="Get_Link_File" 
                         DropDownClosed="Select_Link_File">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding name}"/>
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
-                </StackPanel>
-                <!--UI control-->
-                <Grid Grid.Column="1">
-                    <StackPanel 
-                        Orientation="Horizontal"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Stretch"
-                        Margin="0 5 0 0">
-                        <Button
-                            Click="Minimize"
-                            Height="30" Width="30"
-                            Style="{StaticResource MaterialDesignIconButton}"
-                            ToolTip="Minimize"
-                            materialDesign:ShadowAssist.ShadowDepth="Depth5">
-                            <materialDesign:PackIcon Kind="WindowMinimize" />
-                        </Button>
-                        <Button
-                            x:Name="max"
-                            Click="Maximize"
-                            Height="30" Width="30"
-                            Style="{StaticResource MaterialDesignIconButton}"
-                            ToolTip="Maximize"
-                            materialDesign:ShadowAssist.ShadowDepth="Depth5">
-                            <materialDesign:PackIcon Kind="WindowMaximize"/>
-                        </Button>
-                        <Button
-                            Click="Quit"
-                            Height="30" Width="30"
-                            Style="{StaticResource MaterialDesignIconButton}"
-                            ToolTip="Quit"
-                            materialDesign:ShadowAssist.ShadowDepth="Depth5">
-                            <materialDesign:PackIcon Kind="Power"/>
-                        </Button>
-                    </StackPanel>
-                </Grid>
-            </Grid>
-            <Grid Grid.Row="1">
-                <ListView 
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding name}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+            <ListView 
                         SelectionMode="Single"
                         x:Name="data_update"
-                        Margin="5"
+                        Margin="5 60 5 5"
                         Visibility="{Binding ElementName=setting, Path=IsChecked, Converter={StaticResource BoolToNotVisibleConverter}}">
-                    <ListView.ContextMenu>
-                        <ContextMenu>
-                            <MenuItem Header="Change All" Click="Update_All_Click">
-                                <MenuItem.Icon>
-                                    <Button
+                <ListView.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Change All" Click="Update_All_Click">
+                            <MenuItem.Icon>
+                                <Button
                                             HorizontalAlignment="Center"
                                             VerticalAlignment="Center"
                                             Height="30" Width="30"
                                             Style="{StaticResource MaterialDesignIconButton}"
                                             materialDesign:ShadowAssist.ShadowDepth="Depth5">
-                                        <materialDesign:PackIcon Kind="ElectronFramework" Height="20" Width="20"/>
-                                    </Button>
-                                </MenuItem.Icon>
-                            </MenuItem>
-                        </ContextMenu>
-                    </ListView.ContextMenu>
-                    <ListView.View>
-                        <GridView>
-                            <GridViewColumn>
-                                <GridViewColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <CheckBox
+                                    <materialDesign:PackIcon Kind="ElectronFramework" Height="20" Width="20"/>
+                                </Button>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                    </ContextMenu>
+                </ListView.ContextMenu>
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn>
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <CheckBox
                                             Click="Save_Data"
                                             Width="30" Height="30"
                                             IsChecked="{Binding changeORignore}"
                                             Style="{StaticResource MaterialDesignLightCheckBox}"/>
-                                    </DataTemplate>
-                                </GridViewColumn.CellTemplate>
-                            </GridViewColumn>
-                            <GridViewColumn Header="Element Name" DisplayMemberBinding="{Binding element_name}"/>
-                            <GridViewColumn Header="Role Change" DisplayMemberBinding="{Binding type_change}"/>
-                            <GridViewColumn Header="Change">
-                                <GridViewColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Button
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn Header="Element Name" DisplayMemberBinding="{Binding element_name}"/>
+                        <GridViewColumn Header="Role Change" DisplayMemberBinding="{Binding type_change}"/>
+                        <GridViewColumn Header="Change">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button
                                             Click="Update_Click"
                                             x:Name="change"
                                             Height="30" Width="30"
                                             Style="{StaticResource MaterialDesignIconButton}"
                                             Background="{DynamicResource MaterialDesignTextFieldBoxBackground}"
                                             ToolTip="Change"  >
-                                            <materialDesign:PackIcon Kind="ElectronFramework" Height="25" Width="25"/>
-                                        </Button>
-                                    </DataTemplate>
-                                </GridViewColumn.CellTemplate>
-                            </GridViewColumn>
-                        </GridView>
-                    </ListView.View>
-                    <ListView.ItemContainerStyle>
-                        <Style TargetType="ListViewItem">
-                            <EventSetter Event="MouseLeftButtonUp" Handler="High_Light_Click" />
-                            <EventSetter Event="PreviewGotKeyboardFocus" Handler="SelectCurrentItem"/>
-                            <Setter Property="ToolTip" Value="{Binding preview}"/>
-                            <Setter Property="Foreground" Value="{Binding color, Mode=TwoWay}"/>
-                            <Setter Property="MinHeight" Value="35"/>
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="ListBoxItem">
-                                        <Border x:Name="Border"
+                                        <materialDesign:PackIcon Kind="ElectronFramework" Height="25" Width="25"/>
+                                    </Button>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                    </GridView>
+                </ListView.View>
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <EventSetter Event="MouseLeftButtonUp" Handler="High_Light_Click" />
+                        <EventSetter Event="PreviewGotKeyboardFocus" Handler="SelectCurrentItem"/>
+                        <Setter Property="ToolTip" Value="{Binding preview}"/>
+                        <Setter Property="Foreground" Value="{Binding color, Mode=TwoWay}"/>
+                        <Setter Property="MinHeight" Value="35"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListBoxItem">
+                                    <Border x:Name="Border"
                                                 Background="{TemplateBinding Background}"
                                                 BorderBrush="{DynamicResource MaterialDesignDivider}"
                                                 BorderThickness="0,0,0,1"
                                                 SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}">
-                                            <GridViewRowPresenter VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
-                                        </Border>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                            <Style.Triggers>
-                                <Trigger Property="IsSelected" Value="True">
-                                    <Setter Property="Background" Value="{DynamicResource MaterialDesignSelection}"/>
-                                </Trigger>
-                                <Trigger Property="IsMouseOver"  Value="True">
-                                    <Setter Property="Background" Value="{DynamicResource MaterialDesignDivider}"/>
-                                </Trigger>
-                                <!--<Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                        <GridViewRowPresenter VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                        <Style.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource MaterialDesignSelection}"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver"  Value="True">
+                                <Setter Property="Background" Value="{DynamicResource MaterialDesignDivider}"/>
+                            </Trigger>
+                            <!--<Trigger Property="IsKeyboardFocusWithin" Value="True">
                                         <Setter Property="IsSelected" Value="True"/>
                                     </Trigger>-->
-                            </Style.Triggers>
-                        </Style>
-                    </ListView.ItemContainerStyle>
-                </ListView>
-                <ListBox
+                        </Style.Triggers>
+                    </Style>
+                </ListView.ItemContainerStyle>
+            </ListView>
+            <ListBox
                     Margin="10"
                     VerticalAlignment="Bottom"
                     Visibility="{Binding ElementName=setting, Path=IsChecked, Converter={StaticResource BoolToVisibleConverter}}"
                     x:Name="parameter_current" FlowDirection="RightToLeft">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel Orientation="Horizontal">
-                                <CheckBox 
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox 
                                     Click="save_setting_Click"
                                     VerticalAlignment="Center"
                                     IsChecked="{Binding isCheck}"/>
-                                <TextBlock 
+                            <TextBlock 
                                     Margin="8 0 0 0"
                                     Text="{Binding parameter_name}"/>
-                            </StackPanel>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-
-            </Grid>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
         </Grid>
     </Grid>
 </Window>
