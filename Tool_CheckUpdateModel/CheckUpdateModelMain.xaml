@@ -1,0 +1,416 @@
+﻿<Window 
+    x:Class="Tool_CheckUpdateModel.CheckUpdateModelMain"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:local="clr-namespace:Tool_CheckUpdateModel"
+    xmlns:convert="clr-namespace:Tool_CheckUpdateModel.Data"
+    Height="450" 
+    Width="800"
+    MinHeight="1000"
+    MinWidth="300"
+    MaxHeight="1000"
+    MaxWidth="1920"
+    Background="{DynamicResource MaterialDesignPaper}"
+    TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+    WindowStyle="None"
+    ResizeMode="CanResizeWithGrip" 
+    WindowStartupLocation="CenterScreen"
+    SizeToContent="WidthAndHeight"
+    MouseDown="Drag"
+    AllowsTransparency="True"
+    BorderBrush="Aqua"
+    BorderThickness="1"
+    >
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Style/StyleWPF.xaml"/>
+
+                <materialDesign:BundledTheme BaseTheme="Dark" PrimaryColor="Teal" SecondaryColor="Cyan" />
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Defaults.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.PopupBox.xaml" />
+                <!--<ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.ComboBox.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.ScrollBar.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.ToggleButton.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.ProgressBar.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Listbox.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Checkbox.xaml" />-->
+
+                <ResourceDictionary>
+                    <SolidColorBrush x:Key="PrimaryHueLightBrush" Color="#FF00FFDC"/>
+                    <SolidColorBrush x:Key="PrimaryHueLightForegroundBrush" Color="Red"/>
+                    <SolidColorBrush x:Key="PrimaryHueMidBrush" Color="#FF00FFDC"/>
+                    <SolidColorBrush x:Key="PrimaryHueMidForegroundBrush" Color="Black"/>
+                </ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+            <!--<Style TargetType="ComboBox" BasedOn="{StaticResource MaterialDesignComboBox}"/>
+            <Style TargetType="ScrollBar" BasedOn="{StaticResource MaterialDesignScrollBar}"/>
+            <Style TargetType="ProgressBar" BasedOn="{StaticResource MaterialDesignCircularProgressBar}"/>
+            <Style TargetType="ListBox" BasedOn="{StaticResource MaterialDesignListBox}"/>
+            <Style TargetType="CheckBox" BasedOn="{StaticResource MaterialDesignAccentCheckBox}"/>-->
+            <!--<Style TargetType="ListView" BasedOn="{StaticResource BaseOnListView}"/>-->
+            <!--<Style TargetType="ListViewItem" BasedOn="{StaticResource BaseOnListViewItem}"/>-->
+            <Style TargetType="GridViewColumnHeader" BasedOn="{StaticResource BaseOnGridView}"/>
+
+            <convert:BoolToVisibleConverter x:Key="BoolToVisibleConverter"/>
+            <convert:BoolToNotVisibleConverter x:Key="BoolToNotVisibleConverter"/>
+            <convert:BoolToCheckConverter x:Key="BoolToCheckConverter"/>
+        </ResourceDictionary>
+    </Window.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="50"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!--Control-->
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="250"/>
+                </Grid.RowDefinitions>
+                <!--Tool control-->
+                <Grid Grid.Row="0">
+                    <StackPanel 
+                        Margin="0 10 0 0"
+                        Orientation="Vertical"
+                        VerticalAlignment="Top"
+                        HorizontalAlignment="Center">
+                        <Button
+                            Width="40" Height="40"
+                            Style="{StaticResource MaterialDesignFloatingActionButton}"
+                            Margin="0 0 0 20"
+                            Command="{Binding SaveCommand}"
+                            materialDesign:ButtonProgressAssist.IsIndicatorVisible="True"
+                            materialDesign:ButtonProgressAssist.Value="-1"
+                            materialDesign:ButtonProgressAssist.IsIndeterminate="True"
+                            Click="Check_Click">
+                            <!-- simple example of toggling/animating pack icon with a data trigger-->
+                            <materialDesign:PackIcon Kind="HeadSync"
+                                Height="30"
+                                Width="30"/>
+                        </Button>
+                        <ToggleButton
+                            x:Name="column"
+                            Height="40" Width="40"
+                            Margin="5"
+                            Style="{StaticResource MaterialDesignFlatPrimaryToggleButton}"
+                            ToolTip="Structural Columns"
+                            IsChecked="True"
+                            Click="column_Click">
+                            <materialDesign:PackIcon 
+                                    Kind="Pillar" 
+                                    Height="26" Width="26" 
+                                    VerticalAlignment="Center"
+                                    HorizontalAlignment="Center"/>
+                        </ToggleButton>
+                        <ToggleButton
+                            x:Name="framing"
+                            Height="40" Width="40"
+                            Margin="5"
+                            Style="{StaticResource MaterialDesignFlatPrimaryToggleButton}"
+                            ToolTip="Structural Framing"
+                            IsChecked="False"
+                            Click="framing_Click">
+                            <materialDesign:PackIcon 
+                                    Kind="BowTie" 
+                                    Height="26" Width="26" 
+                                    VerticalAlignment="Center"
+                                    HorizontalAlignment="Center"/>
+                        </ToggleButton>
+                        <ToggleButton
+                            x:Name="floor"
+                            Height="40" Width="40"
+                            Margin="5"
+                            Style="{StaticResource MaterialDesignFlatPrimaryToggleButton}"
+                            ToolTip="Floors"
+                            IsChecked="False"
+                            Click="floor_Click">
+                            <materialDesign:PackIcon 
+                                    Kind="FloorPlan" 
+                                    Height="26" Width="26" 
+                                    VerticalAlignment="Center"
+                                    HorizontalAlignment="Center"/>
+                        </ToggleButton>
+                        <ToggleButton
+                            x:Name="wall"
+                            Height="40" Width="40"
+                            Margin="5"
+                            Style="{StaticResource MaterialDesignFlatPrimaryToggleButton}"
+                            ToolTip="Walls"
+                            IsChecked="False"
+                            Click="wall_Click">
+                            <materialDesign:PackIcon 
+                                    Kind="Wall" 
+                                    Height="26" Width="26" 
+                                    VerticalAlignment="Center"
+                                    HorizontalAlignment="Center"/>
+                        </ToggleButton>
+                        <ToggleButton
+                            x:Name="all_element"
+                            Margin="0 15 0 0"
+                            Style="{StaticResource MaterialDesignSwitchLightToggleButton}"
+                            ToolTip="Change All"
+                            Click="all_element_Click"/>
+                    </StackPanel>
+                </Grid>
+                <!--Setting coltrol-->
+                <Grid Grid.Row="1">
+                    <StackPanel 
+                        DockPanel.Dock="Right"
+                        Orientation="Vertical"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Bottom"
+                        Margin="0 0 0 5">
+                        <materialDesign:PopupBox
+                            Margin="0 0 0 10"
+                            Style="{StaticResource MaterialDesignMultiFloatingActionPopupBox}"
+                            Height="40" Width="40"
+                            PlacementMode="RightAndAlignMiddles"
+                            ToolTipService.Placement="Bottom"
+                            ToolTip="Export">
+                            <materialDesign:PopupBox.ToggleContent>
+                                <materialDesign:PackIcon
+                                    Kind="TableArrowRight"
+                                    Width="20"
+                                    Height="20" />
+                            </materialDesign:PopupBox.ToggleContent>
+                            <StackPanel>
+                                <Button
+                                    Margin="0 0 0 10"
+                                    Style="{StaticResource MaterialDesignIconButton}"
+                                    Height="30" Width="30"
+                                    ToolTip="Export Images"
+                                    Click="Export_Images">
+                                    <materialDesign:PackIcon Kind="FileImageOutline" />
+                                </Button>
+                                <Button
+                                    Margin="0 10 0 0"
+                                    Style="{StaticResource MaterialDesignIconButton}"
+                                    Height="30" Width="30"
+                                    ToolTip="Export Excel"
+                                    Click="Export_Excel">
+                                    <materialDesign:PackIcon Kind="MicrosoftExcel" />
+                                </Button>
+                            </StackPanel>
+                        </materialDesign:PopupBox>
+                        <Button
+                            x:Name="path_check_file"
+                            Margin="0 0 0 10"
+                            Height="40" Width="40"
+                            Style="{StaticResource MaterialDesignIconButton}"
+                            Background="{DynamicResource MaterialDesignTextFieldBoxBackground}"
+                            ToolTip="Select and Link"
+                            materialDesign:ShadowAssist.ShadowDepth="Depth5"
+                            Click="Select_Path_Check_File_Click">
+                            <materialDesign:PackIcon Kind="Add"/>
+                        </Button>
+                        <Button
+                            x:Name="path_excel"
+                            Margin="0 0 0 10"
+                            HorizontalAlignment="Right"
+                            Height="40" Width="40"
+                            Style="{StaticResource MaterialDesignIconButton}"
+                            Background="{DynamicResource MaterialDesignTextFieldBoxBackground}"
+                            Click="path_excel_Click"
+                            materialDesign:ShadowAssist.ShadowDepth="Depth5">
+                            <materialDesign:PackIcon Kind="MicrosoftExcel" />
+                        </Button>
+                        <ToggleButton
+                            x:Name="setting"
+                            Height="40" Width="40"
+                            Style="{StaticResource MaterialDesignFlatPrimaryToggleButton}"
+                            ToolTip="Settings"
+                            IsChecked="False">
+                            <materialDesign:PackIcon 
+                                    Kind="CogOutline" 
+                                    Height="26" Width="26" 
+                                    VerticalAlignment="Center"
+                                    HorizontalAlignment="Center"/>
+                        </ToggleButton>
+                    </StackPanel>
+                </Grid>
+            </Grid>
+        </ScrollViewer>
+
+        <!--Data-->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="70"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="100"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Stretch"
+                            HorizontalAlignment="Left"
+                            Margin="10 5 5 5">
+                    <ComboBox
+                        MinWidth="100"
+                        Name="link_file"
+                        materialDesign:HintAssist.Hint="Link file"
+                        Style="{StaticResource MaterialDesignFloatingHintComboBox}"
+                        DropDownOpened="Get_Link_File" 
+                        DropDownClosed="Select_Link_File">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding name}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+                <!--UI control-->
+                <Grid Grid.Column="1">
+                    <StackPanel 
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Stretch"
+                        Margin="0 5 0 0">
+                        <Button
+                            Click="Minimize"
+                            Height="30" Width="30"
+                            Style="{StaticResource MaterialDesignIconButton}"
+                            ToolTip="Minimize"
+                            materialDesign:ShadowAssist.ShadowDepth="Depth5">
+                            <materialDesign:PackIcon Kind="WindowMinimize" />
+                        </Button>
+                        <Button
+                            x:Name="max"
+                            Click="Maximize"
+                            Height="30" Width="30"
+                            Style="{StaticResource MaterialDesignIconButton}"
+                            ToolTip="Maximize"
+                            materialDesign:ShadowAssist.ShadowDepth="Depth5">
+                            <materialDesign:PackIcon Kind="WindowMaximize"/>
+                        </Button>
+                        <Button
+                            Click="Quit"
+                            Height="30" Width="30"
+                            Style="{StaticResource MaterialDesignIconButton}"
+                            ToolTip="Quit"
+                            materialDesign:ShadowAssist.ShadowDepth="Depth5">
+                            <materialDesign:PackIcon Kind="Power"/>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Grid>
+            <Grid Grid.Row="1">
+                <ListView 
+                        SelectionMode="Single"
+                        x:Name="data_update"
+                        Margin="5"
+                        Visibility="{Binding ElementName=setting, Path=IsChecked, Converter={StaticResource BoolToNotVisibleConverter}}">
+                    <ListView.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="Change All" Click="Update_All_Click">
+                                <MenuItem.Icon>
+                                    <Button
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            Height="30" Width="30"
+                                            Style="{StaticResource MaterialDesignIconButton}"
+                                            materialDesign:ShadowAssist.ShadowDepth="Depth5">
+                                        <materialDesign:PackIcon Kind="ElectronFramework" Height="20" Width="20"/>
+                                    </Button>
+                                </MenuItem.Icon>
+                            </MenuItem>
+                        </ContextMenu>
+                    </ListView.ContextMenu>
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn>
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox
+                                            Click="Save_Data"
+                                            Width="30" Height="30"
+                                            IsChecked="{Binding changeORignore}"
+                                            Style="{StaticResource MaterialDesignLightCheckBox}"/>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Header="Element Name" DisplayMemberBinding="{Binding element_name}"/>
+                            <GridViewColumn Header="Role Change" DisplayMemberBinding="{Binding type_change}"/>
+                            <GridViewColumn Header="Change">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button
+                                            Click="Update_Click"
+                                            x:Name="change"
+                                            Height="30" Width="30"
+                                            Style="{StaticResource MaterialDesignIconButton}"
+                                            Background="{DynamicResource MaterialDesignTextFieldBoxBackground}"
+                                            ToolTip="Change"  >
+                                            <materialDesign:PackIcon Kind="ElectronFramework" Height="25" Width="25"/>
+                                        </Button>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                        </GridView>
+                    </ListView.View>
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <EventSetter Event="MouseLeftButtonUp" Handler="High_Light_Click" />
+                            <EventSetter Event="PreviewGotKeyboardFocus" Handler="SelectCurrentItem"/>
+                            <Setter Property="ToolTip" Value="{Binding preview}"/>
+                            <Setter Property="Foreground" Value="{Binding color, Mode=TwoWay}"/>
+                            <Setter Property="MinHeight" Value="35"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Border x:Name="Border"
+                                                Background="{TemplateBinding Background}"
+                                                BorderBrush="{DynamicResource MaterialDesignDivider}"
+                                                BorderThickness="0,0,0,1"
+                                                SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}">
+                                            <GridViewRowPresenter VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="{DynamicResource MaterialDesignSelection}"/>
+                                </Trigger>
+                                <Trigger Property="IsMouseOver"  Value="True">
+                                    <Setter Property="Background" Value="{DynamicResource MaterialDesignDivider}"/>
+                                </Trigger>
+                                <!--<Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                        <Setter Property="IsSelected" Value="True"/>
+                                    </Trigger>-->
+                            </Style.Triggers>
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                </ListView>
+                <ListBox
+                    Margin="10"
+                    VerticalAlignment="Bottom"
+                    Visibility="{Binding ElementName=setting, Path=IsChecked, Converter={StaticResource BoolToVisibleConverter}}"
+                    x:Name="parameter_current" FlowDirection="RightToLeft">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <CheckBox 
+                                    Click="save_setting_Click"
+                                    VerticalAlignment="Center"
+                                    IsChecked="{Binding isCheck}"/>
+                                <TextBlock 
+                                    Margin="8 0 0 0"
+                                    Text="{Binding parameter_name}"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>

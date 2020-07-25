@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<RevitAddIns>
+	<AddIn Type="Application">
+		<Name>Mr.W</Name>
+		<Assembly>D:\00 CuaKhanh\03 Revit\00 Ribbon_Mr.W\DLL\Ribbon\UI_Ribbon.dll</Assembly>
+		<AddInId>A7773842-AFF2-4B66-B390-C1B810502042</AddInId>
+		<FullClassName>UI_Ribbon.App</FullClassName>
+		<VendorId>KDSP</VendorId>
+		<VendorDescription>https://W.com</VendorDescription>
+	</AddIn>
+</RevitAddIns>

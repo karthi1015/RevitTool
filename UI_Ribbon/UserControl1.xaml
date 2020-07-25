@@ -1,0 +1,34 @@
+﻿<Window x:Class="UI_Ribbon.UserControl1"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:UI_Ribbon"
+        WindowStyle="None" Height="305" Width="465" ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="StyleTemplate/StyleWPF.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+    <Grid>
+
+        <Grid MouseDown="Window_MouseDown" Style="{StaticResource tasbar}" Height="40" VerticalAlignment="Top">
+            <Image Source="\\192.168.1.250\data\Documents\9. Logo\logo.png" Height="29" Width="29" Margin="5,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+            <Label Content="Login" Margin="39,0,346,0" FontSize="14"/>
+        </Grid>
+
+        <Grid Margin="0,40,0,0" Style="{StaticResource main}">
+            <Image Source="\\192.168.1.250\data\Documents\9. Logo\logo+text.png" Height="132" VerticalAlignment="Bottom" Margin="10,0,10,133"/>
+            <Label Content="User Name:" Height="25" Width="75" Margin="20,135,379,101"/>
+            <Label Content="Password:" Height="25" Width="75" Margin="20,169,379,67" />
+            <TextBox Name="user" Height="25" Margin="144,136,10,102" Width="310"/>
+            <PasswordBox Name="password" Height="25" Width="310" Margin="144,170,10,68"  KeyUp="Enter_Click"/>
+            <Button Content="Cancel" Width="80" Height="25"  Click="Exit_Click" Margin="257,214,127,25"/>
+            <Button Content="Login" Height="25" Width="80" Margin="372,214,12,25" Click="Login_Click"/>
+            <Image Name="image" Source="\\192.168.1.250\data\DataBases\01 RevitDataBases\04 Add_in\01 Revit_API\Resources\Image\kakashi.ico" Width="15" Height="15" Margin="433,173,12,72" Panel.ZIndex="1" MouseLeftButtonDown="ViewPassword_Click" MouseLeftButtonUp="HiddenPassword_Click"/>
+            <TextBox Visibility="Hidden" Name="pass" Height="25" Margin="144,170,10,68" Width="310"/>
+        </Grid>
+    </Grid>
+</Window>

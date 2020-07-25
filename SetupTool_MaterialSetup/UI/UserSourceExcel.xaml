@@ -1,0 +1,633 @@
+﻿<Window x:Class="SetupTool_MaterialSetup.UserSourceExcel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:SetupTool_MaterialSetup"
+             Width="1230" Height="800" SizeToContent="Manual"
+        MinWidth="1230" MaxWidth="1500"
+        WindowStartupLocation="Manual"
+        Style="{DynamicResource CustomWindowStyle}">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="../StyleTemplate/StyleWPF.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <!--Backgroud thanh Tasbar!-->
+            <SolidColorBrush x:Key="color" Color="White"/>
+
+            <!--Backgroud thanh Tasbar!-->
+            <SolidColorBrush x:Key="header" Color="Orange"/>
+
+            <!--Backgroud thanh Controls!-->
+            <SolidColorBrush x:Key="control" Color="Aqua"/>
+
+            <!--Backgroud thanh Tasbar!-->
+            <SolidColorBrush x:Key="Tasbar" Color="#FF39454B"/>
+
+            <!--Backgroud toàn bộ giao diện!-->
+            <SolidColorBrush x:Key="Main" Color="#FF4A555B"/>
+
+            <DataTemplate x:Key="combobox_single_value">
+                <StackPanel 
+                    Height="30" 
+                    Width="150" 
+                    Background="{StaticResource Main}">
+                    <TextBlock 
+                        Text="{Binding single_value}"  
+                        Margin="0,6,0,0" 
+                        TextAlignment="Center"/>
+                </StackPanel>
+            </DataTemplate>
+
+            <DataTemplate x:Key="combobox_value_image">
+                <StackPanel 
+                    Height="18" 
+                    Width="213" 
+                    Orientation="Horizontal" 
+                    Background="{StaticResource Main}">
+                    <TextBlock 
+                        Text="{Binding value_image}"  
+                        FontSize="12" 
+                        HorizontalAlignment="Center" 
+                        VerticalAlignment="Center"
+                        Margin="5,0,0,0"/>
+                    <Image 
+                        Margin="5,0,20,0" 
+                        Width="30" 
+                        Height="18" 
+                        Stretch="Fill" 
+                        Source="{Binding iamge}"/>
+                </StackPanel>
+            </DataTemplate>
+
+        </ResourceDictionary>
+    </Window.Resources>
+    <Grid Style="{StaticResource main}">
+        <Grid MouseDown="Window_MouseDown" 
+              Background="Black" 
+              Height="40" 
+              VerticalAlignment="Top">
+            <Image Name="logo_image"
+                   Height="32"
+                   Width="32"
+                   Margin="4,4,0,4"
+                   HorizontalAlignment="Left"/>
+            <Label Content="Material By Excel" 
+                   Margin="44,0,41,0" 
+                   FontSize="14"/>
+            <Button Content="X" 
+                    Background="#FFFD4848" 
+                    FontSize="16" 
+                    HorizontalAlignment="Right" 
+                    Width="33" 
+                    Margin="0,4,3,0" 
+                    Height="32" 
+                    VerticalAlignment="Top"
+                    Click="closeWindow"/>
+        </Grid>
+        <Grid Margin="0,40,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="300"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid Grid.Column="0" Style="{StaticResource tasbar}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="220"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Grid 
+                    Grid.Row="0">
+                    <Label
+                        BorderBrush="{StaticResource color}" 
+                        BorderThickness="1,1,1,0" 
+                        Content="Controls :"
+                        VerticalContentAlignment="Top"
+                        Padding="10,5,0,0"
+                        Foreground="{StaticResource header}"/>
+                    <CheckBox 
+                        Name="edit_material"
+                        Content="Edit Material"
+                        VerticalAlignment="Top"
+                        HorizontalAlignment="Left"
+                        VerticalContentAlignment="Center"
+                        Height="30"
+                        Margin="110,0,5,0"/>
+                    <Button 
+                        Width="80"
+                        Height="80"
+                        VerticalAlignment="Top"
+                        HorizontalAlignment="Left"
+                        Margin="10,135,0,0"
+                        Style="{StaticResource TabButtonFirst}" 
+                        Click="Select_Du_Lieu_To_Excel"
+                        ToolTip="Chọn file excel  để lấy thông tin tạo vật liệu mới">
+                        <StackPanel Orientation="Vertical">
+                            <Image 
+                                Height="60"
+                                Width="60"
+                                Name="select_image"
+                                HorizontalAlignment="Center" 
+                                VerticalAlignment="Center"/>
+                            <TextBlock
+                                Text="Select" 
+                                Foreground="{StaticResource color}" 
+                                Height="20"
+                                TextAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button 
+                        Width="80"
+                        Height="80"
+                        VerticalAlignment="Top"
+                        HorizontalAlignment="Left"
+                        Margin="210,35,0,0"
+                        Style="{StaticResource TabButtonFirst}" 
+                        Click="Export_Du_Lieu_To_Excel"
+                        ToolTip="Export tất cả thông tin vật liệu có trong dự ra excel">
+                        <StackPanel Orientation="Vertical">
+                            <Image 
+                                Height="60"
+                                Width="60"
+                                Name="export_image"
+                                HorizontalAlignment="Center" 
+                                VerticalAlignment="Center"/>
+                            <TextBlock
+                                Text="Export" 
+                                Foreground="{StaticResource color}" 
+                                Height="20"
+                                TextAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button 
+                        Width="80"
+                        Height="80"
+                        VerticalAlignment="Top"
+                        HorizontalAlignment="Left"
+                        Margin="10,35,0,0"
+                        Style="{StaticResource TabButtonFirst}"
+                        Click="Tao_Vat_Lieu_Moi_Excel">
+                        <StackPanel Orientation="Vertical">
+                            <Image 
+                                Height="60"
+                                Width="60"
+                                Name="add_image"
+                                HorizontalAlignment="Center" 
+                                VerticalAlignment="Center"/>
+                            <TextBlock
+                                Text="Create" 
+                                Foreground="{StaticResource color}" 
+                                Height="20"
+                                TextAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button 
+                        Width="80"
+                        Height="80"
+                        VerticalAlignment="Top"
+                        HorizontalAlignment="Left"
+                        Margin="110,35,0,0"
+                        Style="{StaticResource TabButtonFirst}"
+                        Click="Sua_Thong_Tin_Vat_Lieu_Excel"
+                        IsEnabled="{Binding ElementName=edit_material, Path=IsChecked, UpdateSourceTrigger=PropertyChanged}">
+                        <StackPanel Orientation="Vertical">
+                            <Image 
+                                Height="60"
+                                Width="60"
+                                Name="modify_image"
+                                HorizontalAlignment="Center" 
+                                VerticalAlignment="Center"/>
+                            <TextBlock
+                                Text="Modify" 
+                                Foreground="{StaticResource color}" 
+                                Height="20"
+                                TextAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    
+                </Grid>
+
+                <Grid
+                    Grid.Row="1"
+                    Margin="0,0,0,5">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="130"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Label
+                        Grid.RowSpan="3"
+                        BorderBrush="{StaticResource color}" 
+                        BorderThickness="1,1,1,1" 
+                        Content="Search By Key : "
+                        VerticalContentAlignment="Top"
+                        Padding="10,5,0,0"
+                        Foreground="{StaticResource header}"/>
+                    <TextBox 
+                        Text="..."
+                        Name="search_material_project"
+                        BorderBrush="White" 
+                        BorderThickness="1,1,1,1" 
+                        Height="25" 
+                        VerticalContentAlignment="Center"
+                        HorizontalContentAlignment="Center"
+                        VerticalAlignment="Top"
+                        Margin="5,30,5,0"
+                        Padding="5,2,5,5" 
+                        TextChanged="Search_Material_Project"/>
+
+                    <Label 
+                        Content="Bảng vị trí bắt đầu lấy dữ liệu :"
+                        BorderBrush="White" 
+                        BorderThickness="1,1,1,1" 
+                        Height="30" 
+                        HorizontalContentAlignment="Left"
+                        VerticalContentAlignment="Center"
+                        VerticalAlignment="Top"
+                        Margin="0,63,0,0"
+                        Padding="5,0,0,0"/>
+                    <CheckBox 
+                        Name="edit_vi_tri"
+                        Content="Edit Position"
+                        VerticalAlignment="Top"
+                        HorizontalAlignment="Left"
+                        VerticalContentAlignment="Center"
+                        Height="30"
+                        Margin="20,95,5,0"/>
+                    <Label 
+                        Content="Hàng"
+                        VerticalAlignment="Top"
+                        HorizontalAlignment="Left"
+                        VerticalContentAlignment="Center"
+                        HorizontalContentAlignment="Center"
+                        Height="30"
+                        Width="50"
+                        Margin="150,95,5,0"/>
+                    <TextBox 
+                        Text="2"
+                        Name="value_hang"
+                        BorderBrush="White" 
+                        BorderThickness="1,1,1,1" 
+                        Height="25" 
+                        VerticalContentAlignment="Center"
+                        HorizontalContentAlignment="Center"
+                        VerticalAlignment="Top"
+                        Margin="200,98,5,0"
+                        Padding="5,2,5,5" 
+                        TextChanged="Change_Value_Hang"
+                        IsEnabled="{Binding ElementName=edit_vi_tri, Path=IsChecked, UpdateSourceTrigger=PropertyChanged}"/>
+                    <ListView
+                        Name="vi_tri_bat_dau" Grid.Row="1">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="Dữ Liệu" Width="130">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock 
+                                                Text="{Binding ten_du_lieu_excel}" 
+                                                Padding="10,0,0,0"/>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                                <GridViewColumn Header="Cột" Width="70">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBox 
+                                                Margin="5,0,0,0"
+                                                Width="50" 
+                                                Height="23"
+                                                Text="{Binding phuong_dung, Mode=TwoWay}" 
+                                                TextAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                HorizontalAlignment="Center"
+                                                IsEnabled="{Binding ElementName=edit_vi_tri, Path=IsChecked, UpdateSourceTrigger=PropertyChanged}"/>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                                <GridViewColumn Header="Hàng" Width="70">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBox 
+                                                Margin="5,0,0,0"
+                                                Width="50" 
+                                                Height="23"
+                                                Text="{Binding phuong_ngang, Mode=TwoWay}" 
+                                                TextAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                HorizontalAlignment="Center"
+                                                IsEnabled="False"/>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                    
+                </Grid>
+            </Grid>
+
+            <Grid Grid.Column="1" Margin="5">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="150"/>
+                        <ColumnDefinition Width="150"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="30"/>
+                        <RowDefinition Height="30"/>
+                        <RowDefinition Height="120"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!--thông tin vật liệu-->
+                    <Label 
+                        Foreground="{StaticResource header}"
+                        Content="Tên Vật Liệu" 
+                        Grid.Column="0" 
+                        Grid.Row="0"
+                        BorderBrush="White" 
+                        BorderThickness="1,1,1,1" 
+                        Height="30" 
+                        VerticalContentAlignment="Center"
+                        HorizontalContentAlignment="Center"/>
+                    <Label 
+                        Foreground="{StaticResource header}"
+                        Content="Mã Công Tác" 
+                        Grid.Column="1" 
+                        Grid.Row="0"
+                        BorderBrush="White" 
+                        BorderThickness="0,1,1,1" 
+                        Height="30"
+                        VerticalContentAlignment="Center"
+                        HorizontalContentAlignment="Center"/>
+                    <Label 
+                        Foreground="{StaticResource header}"
+                        Content="Đơn Vị" 
+                        Grid.Column="2" 
+                        Grid.Row="0"
+                        BorderBrush="White" 
+                        BorderThickness="0,1,1,1" 
+                        Height="30" 
+                        VerticalContentAlignment="Center"
+                        HorizontalContentAlignment="Center"/>
+                    <TextBox 
+                        Name="ten_vat_lieu"
+                        Grid.Column="0" 
+                        Grid.Row="1"
+                        BorderBrush="White" 
+                        BorderThickness="1,0,1,1" 
+                        Height="30" 
+                        VerticalContentAlignment="Center"
+                        HorizontalContentAlignment="Center"
+                        IsEnabled="{Binding ElementName=edit_material, Path=IsChecked, UpdateSourceTrigger=PropertyChanged}"/>
+                    <TextBox 
+                        Name="ma_cong_tac"
+                        Grid.Column="1" 
+                        Grid.Row="1"
+                        BorderBrush="White" 
+                        BorderThickness="0,0,1,1" 
+                        Height="30" 
+                        VerticalContentAlignment="Center"
+                        HorizontalContentAlignment="Center"
+                        IsEnabled="{Binding ElementName=edit_material, Path=IsChecked, UpdateSourceTrigger=PropertyChanged}"/>
+                    <TextBox 
+                        Name="don_vi"
+                        Grid.Column="2" 
+                        Grid.Row="1"
+                        BorderBrush="White" 
+                        BorderThickness="0,0,1,1" 
+                        Height="30" 
+                        VerticalContentAlignment="Center"
+                        HorizontalContentAlignment="Center"
+                        IsEnabled="{Binding ElementName=edit_material, Path=IsChecked, UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <!--thông tin màu và pattern-->
+                    <Grid
+                        Grid.ColumnSpan="3"
+                        Grid.Row="2"
+                        Margin="0,10,0,0"
+                        >
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Label
+                            Foreground="{StaticResource header}"
+                            Content="Shading"
+                            Grid.Column="0"
+                            BorderBrush="White"
+                            BorderThickness="1"
+                            VerticalContentAlignment="Top"
+                            HorizontalContentAlignment="Left"
+                            Margin="0,0,5,0"
+                            Padding="5,2,5,0"/>
+
+                        <Label
+                            Content="Color : "
+                            Grid.Column="0"
+                            VerticalAlignment="Top"
+                            VerticalContentAlignment="Center"
+                            Height="20"
+                            Margin="0,40,10,0"
+                            Padding="15,0,0,0"/>
+                        <Button 
+                            Name="color_shading"
+                            Content="..."
+                            Grid.Column="0"
+                            VerticalContentAlignment="Center"
+                            HorizontalContentAlignment="Center"
+                            VerticalAlignment="Top"
+                            Height="20"
+                            Margin="100,40,15,0"
+                            Click="Choose_Color_Shading"/>
+                        <Label
+                            Content="Tranparency : "
+                            Grid.Column="0"
+                            VerticalAlignment="Top"
+                            VerticalContentAlignment="Center"
+                            Height="20"
+                            Margin="0,80,10,0"
+                            Padding="15,0,0,0"/>
+                        <Slider 
+                            Name="tranparency_bar"
+                            Grid.Column="0"
+                            VerticalContentAlignment="Center"
+                            HorizontalContentAlignment="Center"
+                            VerticalAlignment="Top"
+                            Height="20"
+                            Margin="100,80,50,0"
+                            Maximum="100"
+                            IsSnapToTickEnabled="True"
+                            BorderBrush="White"/>
+                        <TextBox
+                            Name="tranparency_value"
+                            Grid.Column="0"
+                            VerticalContentAlignment="Center"
+                            HorizontalContentAlignment="Right"
+                            VerticalAlignment="Top"
+                            HorizontalAlignment="Right"
+                            Height="20"
+                            Width="30"
+                            Margin="0,80,15,0"
+                            Text="{Binding ElementName=tranparency_bar, Path=Value, UpdateSourceTrigger=PropertyChanged}"/>
+
+                        <Label
+                            Foreground="{StaticResource header}"
+                            Content="Surface Pattern"
+                            Grid.Column="1"
+                            BorderBrush="White"
+                            BorderThickness="1"
+                            Margin="5,0,5,0"
+                            VerticalContentAlignment="Top"
+                            HorizontalContentAlignment="Left"
+                            Padding="5,2,5,0"/>
+                        <Label
+                            Content="Patter : "
+                            Grid.Column="1"
+                            VerticalAlignment="Top"
+                            VerticalContentAlignment="Center"
+                            Height="20"
+                            Margin="0,40,10,0"
+                            Padding="15,0,0,0"/>
+                        <ComboBox 
+                            Padding="1,0,0,0"
+                            Name="name_surface"
+                            ItemTemplate="{StaticResource combobox_value_image}"
+                            Grid.Column="1"
+                            VerticalContentAlignment="Center"
+                            HorizontalContentAlignment="Center"
+                            VerticalAlignment="Top"
+                            Height="20"
+                            Margin="70,40,15,0"
+                            DropDownClosed="Choose_Surface"/>
+                        <Label
+                            Content="Color : "
+                            Grid.Column="1"
+                            VerticalAlignment="Top"
+                            VerticalContentAlignment="Center"
+                            Height="20"
+                            Margin="0,80,10,0"
+                            Padding="15,0,0,0"/>
+                        <Button 
+                            Name="color_surface"
+                            Content="..."
+                            Grid.Column="1"
+                            VerticalContentAlignment="Center"
+                            HorizontalContentAlignment="Center"
+                            VerticalAlignment="Top"
+                            Height="20"
+                            Margin="70,80,15,0"
+                            Click="Choose_Color_Surface"/>
+
+                        <Label
+                            Foreground="{StaticResource header}"
+                            Content="Cut Pattern"
+                            Grid.Column="2"
+                            BorderBrush="White"
+                            BorderThickness="1"
+                            Margin="5,0,0,0"
+                            VerticalContentAlignment="Top"
+                            HorizontalContentAlignment="Left"
+                            Padding="5,2,5,0"/>
+                        <Label
+                            Content="Patter : "
+                            Grid.Column="2"
+                            VerticalAlignment="Top"
+                            VerticalContentAlignment="Center"
+                            Height="20"
+                            Margin="0,40,10,0"
+                            Padding="15,0,0,0"/>
+                        <ComboBox 
+                            Padding="1,0,0,0"
+                            Name="name_cut"
+                            ItemTemplate="{StaticResource combobox_value_image}"
+                            Grid.Column="2"
+                            VerticalContentAlignment="Center"
+                            HorizontalContentAlignment="Center"
+                            VerticalAlignment="Top"
+                            Height="20"
+                            Margin="70,40,10,0"
+                            DropDownClosed="Choose_Cut"/>
+                        <Label
+                            Content="Color : "
+                            Grid.Column="2"
+                            VerticalAlignment="Top"
+                            VerticalContentAlignment="Center"
+                            Height="20"
+                            Margin="0,80,10,0"
+                            Padding="15,0,0,0"/>
+                        <Button 
+                            Name="color_cut"
+                            Content="..."
+                            Grid.Column="2"
+                            VerticalContentAlignment="Center"
+                            HorizontalContentAlignment="Center"
+                            VerticalAlignment="Top"
+                            Height="20"
+                            Margin="70,80,10,0"
+                            Click="Choose_Color_Cut"/>
+                    </Grid>
+
+                    <!--bảng dữ liệu vật liệu trong project-->
+                    <ListView 
+                        Name="thong_tin_vat_lieu_excel"
+                        Grid.ColumnSpan="3"
+                        Grid.Row="3"
+                        Margin="0,10,0,0"
+                        MouseLeftButtonUp="Xem_Thong_Tin_Vat_Lieu_Excel">
+                        <ListView.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Delete" Click="Xoa_Vat_Lieu_Excel">
+                                    <MenuItem.Icon>
+                                        <Image Source="D:\00 CuaKhanh\03 Revit\00 Ribbon_Mr.W\Image\recycle-bin.png"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                            </ContextMenu>
+                        </ListView.ContextMenu>
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn 
+                                    Header="Mã Công Tác" 
+                                    Width="100" >
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock 
+                                                Text="{Binding ma_cong_tac_excel}"
+                                                Padding="10,0,0,0"/>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                                <GridViewColumn 
+                                    Header="Tên Vật Liệu" 
+                                    Width="700" >
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock 
+                                                Text="{Binding ten_vat_lieu_excel}"
+                                                Padding="10,0,0,0"/>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                                <GridViewColumn 
+                                    Header="Đơn Vị" 
+                                    Width="80">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock 
+                                                Text="{Binding don_vi_excel}"
+                                                TextAlignment="Center"
+                                                Width="75"/>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>
