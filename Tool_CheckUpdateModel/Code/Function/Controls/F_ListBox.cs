@@ -10,11 +10,14 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Media;
+using Tool_CheckUpdateModel.Code.Function.Type;
 using Tool_CheckUpdateModel.Data;
+using Tool_CheckUpdateModel.Data.Binding;
 using ComboBox = System.Windows.Controls.ComboBox;
 using ToggleButton = System.Windows.Controls.Primitives.ToggleButton;
 
-namespace Tool_CheckUpdateModel.Function
+namespace Tool_CheckUpdateModel.Function.Controls
 {
     class F_ListBox
     {
@@ -28,36 +31,38 @@ namespace Tool_CheckUpdateModel.Function
                 {
                     paras = File.ReadAllLines(Source.Path_Options).ToList();
                 }
-                foreach (BuiltInCategory builtIn in Source.Category_Check)
+                foreach (data_category data in Source.Category_Check)
                 {
-                    foreach (Parameter parameter in new FilteredElementCollector(doc).OfCategory(builtIn).WhereElementIsNotElementType().First().Parameters)
+                    if (data.name != Source.Category_Check[0].name)
                     {
-                        if (parameter.Definition.Name == "Volume" ||
-                            parameter.Definition.Name == "Type" ||
-                            (!my_parameter_settings.Any(x => x.parameter_name == parameter.Definition.Name && x.parameter_category == builtIn) &&
-                            (parameter.Definition.ParameterGroup == BuiltInParameterGroup.PG_GEOMETRY || parameter.Definition.ParameterGroup == BuiltInParameterGroup.PG_CONSTRAINTS || parameter.Definition.ParameterGroup == BuiltInParameterGroup.PG_GEOMETRY_POSITIONING)))
+                        List<Element> list = new FilteredElementCollector(doc).OfCategory(data.code).WhereElementIsNotElementType().ToList();
+                        if (list.Count() > 0)
                         {
-                            string cate = "";
-                            if (builtIn == Source.Category_Check[0]) cate = "column";
-                            else if (builtIn == Source.Category_Check[1]) cate = "framing";
-                            else if (builtIn == Source.Category_Check[2]) cate = "floor";
-                            else cate = "wall";
-
-                            bool ischeck = true;
-                            if(paras.Count() > 0)
+                            Element ele = new FilteredElementCollector(doc).OfCategory(data.code).WhereElementIsNotElementType().First();
+                            foreach (Parameter parameter in ele.Parameters)
                             {
-                                if (paras.Any(x => x.Split('\t')[0] == cate && x.Split('\t')[1] == parameter.Definition.Name) == true) ischeck = true;
-                                else ischeck = false;
+                                if (parameter.Definition.Name == "Volume" ||
+                                    parameter.Definition.Name == "Type" ||
+                                    (my_parameter_settings.Any(x => x.parameter_name == parameter.Definition.Name && x.parameter_category == data.code) == false &&
+                                    (parameter.Definition.ParameterGroup == BuiltInParameterGroup.PG_GEOMETRY || parameter.Definition.ParameterGroup == BuiltInParameterGroup.PG_CONSTRAINTS || parameter.Definition.ParameterGroup == BuiltInParameterGroup.PG_GEOMETRY_POSITIONING)))
+                                {
+                                    bool ischeck = true;
+                                    if (paras.Count() > 0)
+                                    {
+                                        if (paras.Any(x => x.Split('\t')[0] == data.name && x.Split('\t')[1] == parameter.Definition.Name) == true) ischeck = true;
+                                        else ischeck = false;
+                                    }
+                                    my_parameter_settings.Add(new Parameter_Settings()
+                                    {
+                                        isCheck = ischeck,
+                                        parameter = parameter,
+                                        parameter_name = parameter.Definition.Name,
+                                        parameter_group = parameter.Definition.ParameterGroup.ToString(),
+                                        parameter_category = data.code,
+                                        parameter_category_name = data.name
+                                    });
+                                }
                             }
-                            my_parameter_settings.Add(new Parameter_Settings()
-                            {
-                                isCheck = ischeck,
-                                parameter = parameter,
-                                parameter_name = parameter.Definition.Name,
-                                parameter_group = parameter.Definition.ParameterGroup.ToString(),
-                                parameter_category = builtIn,
-                                parameter_category_name = cate
-                            });
                         }
                     }
                 }
@@ -90,9 +95,9 @@ namespace Tool_CheckUpdateModel.Function
                 else
                 {
                     var data_old = File.ReadAllLines(Source.Path_Options).ToList();
-                    foreach(string old in data_old)
+                    foreach (string old in data_old)
                     {
-                        if(Parameters.Any(x => x == old) == false)
+                        if (Parameters.Any(x => x == old) == false)
                         {
                             Parameters.Add(old);
                         }
@@ -151,7 +156,45 @@ namespace Tool_CheckUpdateModel.Function
                 {
                     list_data.Add(element.element_id + "\t" + element.changeORignore + "\t" + element.color);
                 }
+                if (File.Exists(doc_link.PathName.Split('.')[0]))
+                {
+                    string direction = Path.GetDirectoryName(doc_link.PathName) + "\\Backup";
+                    if (!Directory.Exists(direction)) Directory.CreateDirectory(direction);
+
+                    File.Move(doc_link.PathName.Split('.')[0], direction + "\\" + Path.GetFileName(doc_link.PathName.Split('.')[0]) + "_" + DateTime.Now.ToString("ddMMyyHHmmss"));
+                }
+
                 File.WriteAllLines(doc_link.PathName.Split('.')[0], list_data);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
+        //-------------------------------------------------------
+        public static void Roll_Back_Save_Data_Check(ObservableCollection<Element_Change> element_Changes, ComboBox link_file, UIApplication uiapp
+            , Document doc_link, Document doc, ObservableCollection<Parameter_Settings> my_parameter_settings)
+        {
+            try
+            {
+                string direction = Path.GetDirectoryName(doc_link.PathName) + "\\Backup";
+                if (Directory.Exists(direction))
+                {
+                    File.Delete(doc_link.PathName.Split('.')[0]);
+                    if (new DirectoryInfo(direction).GetFiles().Length == 0)
+                    {
+                        Directory.Delete(direction);
+                    }
+                    else
+                    {
+                        File.Move(new DirectoryInfo(direction).GetFiles().OrderByDescending(o => o.LastWriteTime).FirstOrDefault().FullName, doc_link.PathName.Split('.')[0]);
+                    }
+                }
+                else
+                {
+                    File.Delete(doc_link.PathName.Split('.')[0]);
+                }
             }
             catch (Exception ex)
             {

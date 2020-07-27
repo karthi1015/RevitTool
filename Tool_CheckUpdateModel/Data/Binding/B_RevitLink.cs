@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Tool_CheckUpdateModel.Data
+namespace Tool_CheckUpdateModel.Data.Binding
 {
     class data_revit_link
     {

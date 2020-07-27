@@ -1,53 +1,98 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
+using Microsoft.Office.Core;
+using Microsoft.Office.Interop.Excel;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using Tool_CheckUpdateModel.Data;
+using Tool_CheckUpdateModel.Data.Binding;
+using Excel = Microsoft.Office.Interop.Excel;
+
 
 namespace Tool_CheckUpdateModel.Function
 {
-    class E_Focus : IExternalEventHandler
+    class E_ExportImages : IExternalEventHandler
     {
+        public ObservableCollection<Element_Change> my_element_change { get; set; }
         public Document doc_link { get; set; }
-        public Element_Change item { get; set; }
 
         public void Execute(UIApplication uiapp)
         {
             UIDocument uidoc = uiapp.ActiveUIDocument;
             Document doc = uidoc.Document;
 
+            TransactionGroup transaction = new TransactionGroup(doc);
+            transaction.Start("ExportImages");
+            Export_Images(uiapp, uidoc, doc);
+            transaction.Assimilate();
+        }
+
+        public string GetName()
+        {
+            return "ExportImages";
+        }
+
+        public void Export_Images(UIApplication uiapp, UIDocument uidoc, Document doc)
+        {
             try
             {
-                Transaction transaction = new Transaction(doc);
-                transaction.Start("Focus");
+                string name = doc_link.PathName.Split('\\').Last().Split('.')[0];
+                string path_directory = Path.GetDirectoryName(doc_link.PathName) + "\\" + "Images";
 
-                Focus(uiapp, doc);
+                if (!Directory.Exists(path_directory))
+                    Directory.CreateDirectory(path_directory);
 
-                transaction.Commit();
+                foreach (Element_Change item in my_element_change)
+                {
+                    var ieo = new ImageExportOptions
+                    {
+                        PixelSize = 1920,
+                        FilePath = path_directory + "\\" + item.element_id,
+                        FitDirection = FitDirectionType.Horizontal,
+                        HLRandWFViewsFileType = ImageFileType.PNG,
+                        ImageResolution = ImageResolution.DPI_600,
+                        ExportRange = ExportRange.VisibleRegionOfCurrentView,
+                    };
+
+                    try
+                    {
+                        Transaction transaction1 = new Transaction(doc);
+                        transaction1.Start("BoundingBox");
+                        Focus(uiapp, doc, item);
+                        transaction1.Commit();
+
+                        Thread.Sleep(2);
+
+                        Transaction transaction2 = new Transaction(doc);
+                        transaction2.Start("BoundingBox");
+                        doc.ExportImage(ieo);
+                        transaction2.Commit();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(ex.Message);
+                    }
+                }
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
             }
-            return;
-        }
-        public string GetName()
-        {
-            return "External Event Example";
         }
 
-        //----------------------------------------------------------
-        void Focus(UIApplication uiapp, Document doc)
+        void Focus(UIApplication uiapp, Document doc, Element_Change item)
         {
-            BoundingBoxXYZ boundingBoxXYZ = new BoundingBoxXYZ();
             try
             {
+                BoundingBoxXYZ boundingBoxXYZ = new BoundingBoxXYZ();
                 ResetView(uiapp, doc);
                 double a = 5;
                 if (item.element != null && item.element_link != null)

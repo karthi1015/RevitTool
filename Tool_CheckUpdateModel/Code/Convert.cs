@@ -26,6 +26,7 @@ namespace Tool_CheckUpdateModel.Data
             return value is Visibility && (Visibility)value == Visibility.Visible;
         }
     }
+    
     public class BoolToNotVisibleConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object Parameter, CultureInfo culture)
@@ -47,6 +48,30 @@ namespace Tool_CheckUpdateModel.Data
         public object ConvertBack(object value, Type targetType, object Parameter, CultureInfo culture)
         {
             return value is bool && (bool)value == false;
+        }
+    }
+
+    public class StringToVisibleConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object Parameter, CultureInfo culture)
+        {
+            return (value is string && (string)value == "visible") ? Visibility.Visible : Visibility.Collapsed;
+        }
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class StringToNotVisibleConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object Parameter, CultureInfo culture)
+        {
+            return (value is string && (string)value != "visible") ? Visibility.Visible : Visibility.Collapsed;
+        }
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
         }
     }
 

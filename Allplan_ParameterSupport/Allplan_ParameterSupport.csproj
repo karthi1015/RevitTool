@@ -62,7 +62,7 @@
     <Compile Include="Data\ListConvert.cs" />
     <Compile Include="Data\ListSource.cs" />
     <Compile Include="Data\ListTXT.cs" />
-    <Compile Include="Function\FunctionExternal.cs" />
+    <Compile Include="Function\E_AddData.cs" />
     <Compile Include="Function\FunctionSQL.cs" />
     <Compile Include="Function\FunctionSupoort.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

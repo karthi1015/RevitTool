@@ -1,18 +1,21 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using Autodesk.Revit.UI.Selection;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Forms;
 using System.Windows.Input;
+using Tool_CheckUpdateModel.Code.Function.Type;
 using Tool_CheckUpdateModel.Data;
+using Tool_CheckUpdateModel.Data.Binding;
 using Tool_CheckUpdateModel.Function;
+using Tool_CheckUpdateModel.Function.Controls;
 using ListViewItem = System.Windows.Controls.ListViewItem;
 using MessageBox = System.Windows.MessageBox;
 using Path = System.IO.Path;
@@ -34,6 +37,9 @@ namespace Tool_CheckUpdateModel
             my_parameter_settings = new ObservableCollection<Parameter_Settings>();
             my_element_change = new ObservableCollection<Element_Change>();
             my_data_revit_link = new ObservableCollection<data_revit_link>();
+
+            category_combobox.ItemsSource = Source.Category_Check;
+            category_combobox.SelectedIndex = 0;
             Get_Parameter();
             get_path_excel_default();
         }
@@ -44,10 +50,7 @@ namespace Tool_CheckUpdateModel
         UIDocument uidoc;
         Document doc;
 
-        public TXT my_txt { get; set; }
-        string path = "";
-
-        E_Column my_change;
+        E_All my_change;
         ExternalEvent e_change;
 
         E_Link my_link;
@@ -67,7 +70,7 @@ namespace Tool_CheckUpdateModel
         #region Function Add ExternalEvent
         public void Add_ExternalEvent()
         {
-            my_change = new E_Column();
+            my_change = new E_All();
             e_change = ExternalEvent.Create(my_change);
 
             my_link = new E_Link();
@@ -109,11 +112,11 @@ namespace Tool_CheckUpdateModel
                 var a = new FilteredElementCollector(doc).OfClass(typeof(RevitLinkType)).Cast<RevitLinkType>().ToList();
                 my_data_revit_link = new ObservableCollection<data_revit_link>(new FilteredElementCollector(doc).OfClass(typeof(RevitLinkType)).Cast<RevitLinkType>().ToList()
                     .Select(x => new data_revit_link()
-                {
-                    type = x,
-                    name = x.Name,
-                    document = docs.FirstOrDefault(y => y.Title + ".rvt" == x.Name)
-                }));
+                    {
+                        type = x,
+                        name = x.Name,
+                        document = docs.FirstOrDefault(y => y.Title + ".rvt" == x.Name)
+                    }));
 
                 link_file.ItemsSource = my_data_revit_link;
                 CollectionView view = (CollectionView)CollectionViewSource.GetDefaultView(link_file.ItemsSource);
@@ -130,7 +133,7 @@ namespace Tool_CheckUpdateModel
         {
             try
             {
-                if(link_file.SelectedItem != null)
+                if (link_file.SelectedItem != null)
                 {
                     data_revit_link item = (data_revit_link)link_file.SelectedItem;
                     if (item.document == null)
@@ -143,7 +146,7 @@ namespace Tool_CheckUpdateModel
                             my_load_form.path = file.FileName;
                             my_load_form.link_file = link_file;
                             e_load_form.Raise();
-                        } 
+                        }
                         else
                         {
                             link_file.SelectedItem = null;
@@ -215,8 +218,10 @@ namespace Tool_CheckUpdateModel
                 MessageBox.Show(ex.Message);
             }
         }
+        #endregion
 
-        //-------------------------------------------------------
+        //----------------------------------------------------------------------------------------------------------------------------------------
+        #region Function Button Check
         Document doc_link = null;
         private void Check_Click(object sender, RoutedEventArgs e)
         {
@@ -227,7 +232,7 @@ namespace Tool_CheckUpdateModel
                     data_revit_link item = (data_revit_link)link_file.SelectedItem;
                     doc_link = item.document;
                     my_element_change = new ObservableCollection<Element_Change>();
-                    F_Column.Check_Element(doc, doc_link, my_parameter_settings, my_element_change);
+                    F_All.Check_Element(doc, doc_link, my_parameter_settings, my_element_change);
 
                     Add_Element_Change();
                 }
@@ -248,9 +253,9 @@ namespace Tool_CheckUpdateModel
             {
                 F_ListBox.Get_Parameter(my_parameter_settings, doc, parameter_current);
 
-                parameter_current.Items.SortDescriptions.Add(new System.ComponentModel.SortDescription("parameter_group", System.ComponentModel.ListSortDirection.Ascending));
-                parameter_current.Items.SortDescriptions.Add(new System.ComponentModel.SortDescription("isCheck", System.ComponentModel.ListSortDirection.Descending));
-                parameter_current.Items.SortDescriptions.Add(new System.ComponentModel.SortDescription("parameter_name", System.ComponentModel.ListSortDirection.Ascending));
+                parameter_current.Items.SortDescriptions.Add(new SortDescription("parameter_group", ListSortDirection.Ascending));
+                parameter_current.Items.SortDescriptions.Add(new SortDescription("isCheck", ListSortDirection.Descending));
+                parameter_current.Items.SortDescriptions.Add(new SortDescription("parameter_name", ListSortDirection.Ascending));
 
                 CollectionView view = (CollectionView)CollectionViewSource.GetDefaultView(parameter_current.ItemsSource);
                 view.Filter = Filter;
@@ -264,10 +269,9 @@ namespace Tool_CheckUpdateModel
         //-------------------------------------------------------
         private bool Filter(object item)
         {
-            if (string.IsNullOrEmpty(state_control))
-                return true;
-            else
-                return ((item as Parameter_Settings).parameter_category_name.IndexOf(state_control, StringComparison.OrdinalIgnoreCase) >= 0);
+            data_category select = (data_category)category_combobox.SelectedItem;
+            if (select.name == Source.Category_Check[0].name) return true;
+            else return ((item as Parameter_Settings).parameter_category_name.IndexOf(select.name, StringComparison.OrdinalIgnoreCase) >= 0);
         }
 
         //-------------------------------------------------------
@@ -275,108 +279,51 @@ namespace Tool_CheckUpdateModel
         {
             F_ListBox.save_settings(my_parameter_settings);
         }
+
+        //-------------------------------------------------------
+        private void check_all_parameter_current_view_Click(object sender, MouseButtonEventArgs e)
+        {
+            try
+            {
+                for (int i = 0; i < parameter_current.Items.Count; i++)
+                {
+                    Parameter_Settings item = (Parameter_Settings)parameter_current.Items[i];
+                    item.isCheck = true;
+                }
+                parameter_current.Items.Refresh();
+                F_ListBox.save_settings(my_parameter_settings);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+        //-------------------------------------------------------
+        private void visible_setting_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (setting.ToolTip.ToString() == "visible") setting.ToolTip = "not visible";
+                else setting.ToolTip = "visible";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
         #endregion
 
         //----------------------------------------------------------------------------------------------------------------------------------------
-        #region Function Button Control
-        string state_control = "column";
-        private void column_Click(object sender, RoutedEventArgs e)
+        #region Function Combobox Filter
+        private void filter_category_Click(object sender, EventArgs e)
         {
             try
             {
-                F_Button.State_Control(column.Name, column, framing, floor, wall);
-                state_control = column.Name;
-                new_state = state_control;
-                if (parameter_current.Items.Count > 0) CollectionViewSource.GetDefaultView(parameter_current.ItemsSource).Refresh();
-                if (all_element.IsChecked == false)
-                {
-                    if (data_update.Items.Count > 0) CollectionViewSource.GetDefaultView(data_update.ItemsSource).Refresh();
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
+                data_category item = (data_category)category_combobox.SelectedItem;
 
-        //-------------------------------------------------------
-        private void framing_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                F_Button.State_Control(framing.Name, column, framing, floor, wall);
-                state_control = framing.Name;
-                new_state = state_control;
-                if (parameter_current.Items.Count > 0) CollectionViewSource.GetDefaultView(parameter_current.ItemsSource).Refresh();
-                if (all_element.IsChecked == false)
-                {
-                    if (data_update.Items.Count > 0) CollectionViewSource.GetDefaultView(data_update.ItemsSource).Refresh();
-                }
+                if (my_parameter_settings.Count() > 0) CollectionViewSource.GetDefaultView(parameter_current.ItemsSource).Refresh();
 
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        //-------------------------------------------------------
-        private void floor_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                F_Button.State_Control(floor.Name, column, framing, floor, wall);
-                state_control = floor.Name;
-                new_state = state_control;
-                if (parameter_current.Items.Count > 0) CollectionViewSource.GetDefaultView(parameter_current.ItemsSource).Refresh();
-                if (all_element.IsChecked == false)
-                {
-                    if (data_update.Items.Count > 0) CollectionViewSource.GetDefaultView(data_update.ItemsSource).Refresh();
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        //-------------------------------------------------------
-        private void wall_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                F_Button.State_Control(wall.Name, column, framing, floor, wall);
-                state_control = wall.Name;
-                new_state = state_control;
-                if (parameter_current.Items.Count > 0) CollectionViewSource.GetDefaultView(parameter_current.ItemsSource).Refresh();
-                if (all_element.IsChecked == false)
-                {
-                    if (data_update.Items.Count > 0) CollectionViewSource.GetDefaultView(data_update.ItemsSource).Refresh();
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        //-------------------------------------------------------
-        string new_state = "";
-        private void all_element_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                if (all_element.IsChecked == true)
-                {
-                    new_state = state_control;
-                    state_control = "";
-                    if (data_update.Items.Count > 0) CollectionViewSource.GetDefaultView(data_update.ItemsSource).Refresh();
-                }
-                else
-                {
-                    state_control = new_state;
-                    if (data_update.Items.Count > 0) CollectionViewSource.GetDefaultView(data_update.ItemsSource).Refresh();
-                }
+                if (my_element_change.Count() > 0) CollectionViewSource.GetDefaultView(data_update.ItemsSource).Refresh();
             }
             catch (Exception ex)
             {
@@ -394,8 +341,8 @@ namespace Tool_CheckUpdateModel
                 data_update.ItemsSource = my_element_change;
 
                 CollectionView view = (CollectionView)CollectionViewSource.GetDefaultView(data_update.ItemsSource);
-                view.SortDescriptions.Add(new SortDescription("element_name", ListSortDirection.Ascending));
                 view.SortDescriptions.Add(new SortDescription("type_change", ListSortDirection.Ascending));
+                view.SortDescriptions.Add(new SortDescription("element_name", ListSortDirection.Ascending));
                 view.Filter = Filter_Element_Change;
             }
             catch (Exception ex)
@@ -407,10 +354,9 @@ namespace Tool_CheckUpdateModel
         //-------------------------------------------------------
         private bool Filter_Element_Change(object item)
         {
-            if (string.IsNullOrEmpty(state_control))
-                return true;
-            else
-                return ((item as Element_Change).parameter_category_name.IndexOf(state_control, StringComparison.OrdinalIgnoreCase) >= 0);
+            data_category select = (data_category)category_combobox.SelectedItem;
+            if (select.name == Source.Category_Check[0].name) return true;
+            else return ((item as Element_Change).parameter_category_name.IndexOf(select.name, StringComparison.OrdinalIgnoreCase) >= 0);
         }
 
         //-------------------------------------------------------
@@ -441,7 +387,7 @@ namespace Tool_CheckUpdateModel
                 index = data_update.SelectedIndex;
 
                 Element_Change item = (Element_Change)data_update.Items[index];
-                if (item.changeORignore)
+                if (item.changeORignore && item.color == Source.color_not_change)
                 {
                     ObservableCollection<Element_Change> element_Changes = new ObservableCollection<Element_Change>();
                     element_Changes.Add(item);
@@ -460,9 +406,26 @@ namespace Tool_CheckUpdateModel
             }
         }
 
+        //-------------------------------------------------------
         private void Save_Data(object sender, RoutedEventArgs e)
         {
             F_ListBox.Save_Data_Check(my_element_change, link_file, uiapp, doc_link);
+        }
+
+        //-------------------------------------------------------
+        private void roll_back_Click(object sender, RoutedEventArgs e)
+        {
+            F_ListBox.Roll_Back_Save_Data_Check(my_element_change, link_file, uiapp, doc_link, doc, my_parameter_settings);
+
+            if (link_file.SelectedItem != null)
+            {
+                data_revit_link item = (data_revit_link)link_file.SelectedItem;
+                doc_link = item.document;
+                my_element_change = new ObservableCollection<Element_Change>();
+                F_All.Check_Element(doc, doc_link, my_parameter_settings, my_element_change);
+
+                Add_Element_Change();
+            }
         }
 
         //-------------------------------------------------------
@@ -481,7 +444,7 @@ namespace Tool_CheckUpdateModel
                 for (int i = 0; i < data_update.Items.Count; i++)
                 {
                     Element_Change item = (Element_Change)data_update.Items[i];
-                    if (item.changeORignore)
+                    if (item.changeORignore && item.color == Source.color_not_change)
                     {
                         element_Changes.Add(item);
                         item.color = Source.color_used_change;
@@ -530,7 +493,7 @@ namespace Tool_CheckUpdateModel
             try
             {
                 OpenFileDialog file = new OpenFileDialog();
-                if(file.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                if (file.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
                     path_excel.ToolTip = file.FileName;
                     File.WriteAllText(Source.Path_Excel, path_excel.ToolTip.ToString());
@@ -547,7 +510,7 @@ namespace Tool_CheckUpdateModel
         {
             try
             {
-                if(File.Exists(Source.Path_Excel))
+                if (File.Exists(Source.Path_Excel))
                 {
                     path_excel.ToolTip = File.ReadAllText(Source.Path_Excel);
                 }
@@ -557,6 +520,8 @@ namespace Tool_CheckUpdateModel
                 MessageBox.Show(ex.Message);
             }
         }
+
+
         #endregion
     }
 }

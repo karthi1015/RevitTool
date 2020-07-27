@@ -27,31 +27,24 @@ namespace Allplan_ParameterSupport
     //Draw.Raise();
     public class ExternalEventClass : IExternalEventHandler
     {
-        public string command { get; set; }
-
-        ListSource mySource;
-        FunctionSupoort myFunctionSupport;
+        public ListView thong_tin_parameter { get; set; }
+        public All_Data myAll_Data { get; set; }
 
         public void Execute(UIApplication uiapp)
         {
             UIDocument uidoc = uiapp.ActiveUIDocument;
             Document doc = uidoc.Document;
-            mySource = new ListSource();
-            myFunctionSupport = new FunctionSupoort();
 
             try
             {
                 Transaction transaction = new Transaction(doc);
                 transaction.Start("Parameters");
 
-                if (command == "Create")
+                string result = Them();
+
+                if (result == "S")
                 {
-                    string result = Them_Hoac_Xoa_Information_Trong_Project(uiapp, doc);
-                    string result1 = Them_Hoac_Xoa_Parameter_Trong_Project(uiapp, doc);
-                    if (result == "S" && result1 == "S")
-                    {
-                        MessageBox.Show("Create Success!", "SUCCESS", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
+                    MessageBox.Show("Cập nhật giá trị parameter cho allplan thành công!", "SUCCESS", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
 
                 transaction.Commit();
@@ -68,51 +61,26 @@ namespace Allplan_ParameterSupport
         }
 
         //----------------------------------------------------------
-        public string Them_Hoac_Xoa_Parameter_Trong_Project(UIApplication uiapp, Document doc)
+        public string Them()
         {
             string result = "F";
             try
             {
-                
-                   
+                for (int i = 0; i < thong_tin_parameter.Items.Count; i++)
+                {
+                    Data item = (Data)thong_tin_parameter.Items[i];
+                    item.cau_kien.LookupParameter(myAll_Data.list_parameter_share_data[2]).Set(item.ten_cau_kien);
+                    item.cau_kien.LookupParameter(myAll_Data.list_parameter_share_data[3]).Set(item.id_cau_kien);
+                    item.cau_kien.LookupParameter(myAll_Data.list_parameter_share_data[4]).Set(item.level_cau_kien);
+                }
+                //add_number_element(uidoc, doc);
                 result = "S";
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                MessageBox.Show(ex.Message);
+
             }
             return result;
         }
-
-        //----------------------------------------------------------
-        public string Them_Hoac_Xoa_Information_Trong_Project(UIApplication uiapp,Document doc)
-        {
-            string result = "F";
-            try
-            {
-                
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-            return result;
-        }
-
-        //----------------------------------------------------------
-        public string Xoa_Type_Project(UIApplication uiapp, Document doc)
-        {
-            string result = "F";
-            try
-            {
-                
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-            return result;
-        }
-
     }
 }

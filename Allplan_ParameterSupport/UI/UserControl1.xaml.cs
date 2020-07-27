@@ -248,34 +248,16 @@ namespace Allplan_ParameterSupport
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------
         private void Them_Thong_tin(object sender, RoutedEventArgs e)
         {
-            string result = Them();
-            if (result == "S")
-            {
-                MessageBox.Show("Cập nhật giá trị parameter cho allplan thành công!", "SUCCESS", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-        }
-
-        //----------------------------------------------------------
-        public string Them()
-        {
-            string result = "F";
             try
             {
-                for (int i = 0; i < thong_tin_parameter.Items.Count; i++)
-                {
-                    Data item = (Data)thong_tin_parameter.Items[i];
-                    item.cau_kien.LookupParameter(myAll_Data.list_parameter_share_data[2]).Set(item.ten_cau_kien);
-                    item.cau_kien.LookupParameter(myAll_Data.list_parameter_share_data[3]).Set(item.id_cau_kien);
-                    item.cau_kien.LookupParameter(myAll_Data.list_parameter_share_data[4]).Set(item.level_cau_kien);
-                }
-                //add_number_element(uidoc, doc);
-                result = "S";
+                myExampleDraw.thong_tin_parameter = thong_tin_parameter;
+                myExampleDraw.myAll_Data = myAll_Data;
+                Draw.Raise();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
+                MessageBox.Show(ex.Message);
             }
-            return result;
         }
 
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------

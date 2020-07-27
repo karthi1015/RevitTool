@@ -10,9 +10,10 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using Tool_CheckUpdateModel.Data;
+using Tool_CheckUpdateModel.Data.Binding;
 using Excel = Microsoft.Office.Interop.Excel;
 
-namespace Tool_CheckUpdateModel.Function
+namespace Tool_CheckUpdateModel.Function.Controls
 {
     class F_Excel
     {

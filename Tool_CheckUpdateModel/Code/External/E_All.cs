@@ -17,10 +17,12 @@ using Autodesk.Revit.DB.Structure;
 using System.Globalization;
 using Tool_CheckUpdateModel.Data;
 using Autodesk.Revit.DB.IFC;
+using Tool_CheckUpdateModel.Data.Binding;
+using Tool_CheckUpdateModel.Function.Controls;
 
 namespace Tool_CheckUpdateModel.Function
 {
-    class E_Column : IExternalEventHandler
+    class E_All : IExternalEventHandler
     {
         public ObservableCollection<Element_Change> element_Changes { get; set; }
         public ObservableCollection<Element_Change> my_element_change { get; set; }
@@ -67,12 +69,12 @@ namespace Tool_CheckUpdateModel.Function
                         else
                         {
                             if (change.element.Pinned) change.element.Pinned = false;
-                            if(change.type_change == "Profile")
+                            if (change.type_change == "Profile")
                             {
                                 var eles = ElementTransformUtils.CopyElements(doc_link, new List<ElementId>() { change.element_link.Id }, doc, Transform.Identity, new CopyPasteOptions());
                                 // Change host
                                 //................
-                                ElementMulticategoryFilter filter = new ElementMulticategoryFilter(new List<BuiltInCategory>() { BuiltInCategory.OST_Windows, BuiltInCategory.OST_Doors});
+                                ElementMulticategoryFilter filter = new ElementMulticategoryFilter(new List<BuiltInCategory>() { BuiltInCategory.OST_Windows, BuiltInCategory.OST_Doors });
                                 List<Element_Group> support_all = new List<Element_Group>();
                                 foreach (FamilyInstance familyInstance in new FilteredElementCollector(doc).WherePasses(filter).WhereElementIsNotElementType().Where(x => (x as FamilyInstance).Host.Id == change.element_link.Id).Cast<FamilyInstance>().ToList())
                                 {
@@ -112,71 +114,64 @@ namespace Tool_CheckUpdateModel.Function
                             {
                                 if (change.type_change == "Location")
                                 {
-                                    if (change.parameter_category_name == "column")
+                                    if (change.parameter_category_name == Source.Category_Check[1].name)
                                     {
                                         LocationPoint columnPoint = change.element.Location as LocationPoint;
                                         columnPoint.Point = (change.element_link.Location as LocationPoint).Point;
                                     }
-                                    else if (change.parameter_category_name == "framing")
+                                    else if (change.parameter_category_name == Source.Category_Check[2].name)
                                     {
                                         LocationCurve columnPoint = change.element.Location as LocationCurve;
                                         columnPoint.Curve = (change.element_link.Location as LocationCurve).Curve;
                                     }
-                                    else if (change.parameter_category_name == "wall")
+                                    else if (change.parameter_category_name == Source.Category_Check[4].name)
                                     {
                                         Wall wall = change.element as Wall;
                                         Wall wall_change = change.element_link as Wall;
                                         LocationCurve columnPoint = wall.Location as LocationCurve;
                                         columnPoint.Curve = (wall_change.Location as LocationCurve).Curve;
                                     }
+                                    else if (change.parameter_category_name == Source.Category_Check[5].name)
+                                    {
+                                        LocationPoint columnPoint = change.element.Location as LocationPoint;
+                                        columnPoint.Point = (change.element_link.Location as LocationPoint).Point;
+                                    }
+                                    else if (change.parameter_category_name == Source.Category_Check[6].name)
+                                    {
+                                        LocationPoint columnPoint = change.element.Location as LocationPoint;
+                                        columnPoint.Point = (change.element_link.Location as LocationPoint).Point;
+                                    }
+                                    else if (change.parameter_category_name == Source.Category_Check[7].name)
+                                    {
+                                        LocationPoint columnPoint = change.element.Location as LocationPoint;
+                                        columnPoint.Point = (change.element_link.Location as LocationPoint).Point;
+                                    }
                                 }
                                 foreach (Parameter_Change para in change.parameter_change)
                                 {
                                     if (para.parameter.Definition.Name == "Type")
                                     {
-                                        ElementId type_id = new ElementId(-1);
-                                        ElementType link_symbol = doc_link.GetElement(change.element_link.get_Parameter(BuiltInParameter.ELEM_TYPE_PARAM).AsElementId()) as ElementType;
-                                        if (change.parameter_category_name == "column")
+                                        if (change.parameter_category_name != Source.Category_Check[5].name && change.parameter_category_name != Source.Category_Check[6].name)
                                         {
-                                            var type = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_StructuralColumns).WhereElementIsElementType().Where(x => x.Name == link_symbol.Name).ToList();
-                                            if (type.Count() > 0) type_id = type.First().Id;
-                                            else
+                                            ElementId type_id = new ElementId(-1);
+                                            ElementType link_symbol = doc_link.GetElement(change.element_link.get_Parameter(BuiltInParameter.ELEM_TYPE_PARAM).AsElementId()) as ElementType;
+                                            foreach (data_category data in Source.Category_Check)
                                             {
-                                                var elment_copy = ElementTransformUtils.CopyElements(doc_link, new List<ElementId>() { link_symbol.Id }, doc, Transform.Identity, new CopyPasteOptions());
-                                                type_id = elment_copy.First();
+                                                if (change.parameter_category_name == data.name)
+                                                {
+                                                    var type = new FilteredElementCollector(doc).OfCategory(data.code).WhereElementIsElementType().Where(x => x.Name == link_symbol.Name).ToList();
+                                                    if (type.Count() > 0) type_id = type.First().Id;
+                                                    else
+                                                    {
+                                                        var elment_copy = ElementTransformUtils.CopyElements(doc_link, new List<ElementId>() { link_symbol.Id }, doc, Transform.Identity, new CopyPasteOptions());
+                                                        type_id = elment_copy.First();
+                                                    }
+                                                    break;
+                                                }
                                             }
+                                            change.element.get_Parameter(BuiltInParameter.ELEM_TYPE_PARAM).Set(type_id);
                                         }
-                                        else if (change.parameter_category_name == "framing")
-                                        {
-                                            var type = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_StructuralColumns).WhereElementIsElementType().Where(x => x.Name == link_symbol.Name).ToList();
-                                            if (type.Count() > 0) type_id = type.First().Id;
-                                            else
-                                            {
-                                                var elment_copy = ElementTransformUtils.CopyElements(doc_link, new List<ElementId>() { link_symbol.Id }, doc, Transform.Identity, new CopyPasteOptions());
-                                                type_id = elment_copy.First();
-                                            }
-                                        }
-                                        else if (change.parameter_category_name == "wall")
-                                        {
-                                            var type = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Walls).WhereElementIsElementType().Where(x => x.Name == link_symbol.Name).ToList();
-                                            if (type.Count() > 0) type_id = type.First().Id;
-                                            else
-                                            {
-                                                var elment_copy = ElementTransformUtils.CopyElements(doc_link, new List<ElementId>() { link_symbol.Id }, doc, Transform.Identity, new CopyPasteOptions());
-                                                type_id = elment_copy.First();
-                                            }
-                                        }
-                                        else
-                                        {
-                                            var type = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Floors).WhereElementIsElementType().Where(x => x.Name == link_symbol.Name).ToList();
-                                            if (type.Count() > 0) type_id = type.First().Id;
-                                            else
-                                            {
-                                                var elment_copy = ElementTransformUtils.CopyElements(doc_link, new List<ElementId>() { link_symbol.Id }, doc, Transform.Identity, new CopyPasteOptions());
-                                                type_id = elment_copy.First();
-                                            }
-                                        }
-                                        change.element.get_Parameter(BuiltInParameter.ELEM_TYPE_PARAM).Set(type_id);
+
                                     }
                                     else
                                     {
@@ -185,7 +180,7 @@ namespace Tool_CheckUpdateModel.Function
                                 }
                                 if (!change.element.Pinned) change.element.Pinned = true;
                             }
-                            
+
                         }
                         change.color = Source.color_used_change;
                         data_update.Items.Refresh();

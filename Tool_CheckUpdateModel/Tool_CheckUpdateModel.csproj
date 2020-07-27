@@ -81,23 +81,23 @@
     <Compile Include="CheckUpdateModelMain.xaml.cs">
       <DependentUpon>CheckUpdateModelMain.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Data\Binding.cs" />
-    <Compile Include="Data\B_RevitLink.cs" />
-    <Compile Include="Data\Convert.cs" />
+    <Compile Include="Code\Function\Controls\F_Combobox.cs" />
+    <Compile Include="Code\Function\Type\F_All.cs" />
+    <Compile Include="Data\Binding\Binding.cs" />
+    <Compile Include="Data\Binding\B_Category.cs" />
+    <Compile Include="Data\Binding\B_RevitLink.cs" />
+    <Compile Include="Code\Convert.cs" />
     <Compile Include="Data\MessageBox_Data.cs" />
     <Compile Include="Data\Source.cs" />
-    <Compile Include="Data\TXT.cs" />
-    <Compile Include="Function\E_ExportImages.cs" />
-    <Compile Include="Function\E_Column.cs" />
-    <Compile Include="Function\E_Focus.cs" />
-    <Compile Include="Function\E_LoadForm.cs" />
-    <Compile Include="Function\E_Link.cs" />
-    <Compile Include="Function\F_Button.cs" />
-    <Compile Include="Function\F_Column.cs" />
-    <Compile Include="Function\F_Excel.cs" />
-    <Compile Include="Function\F_ListBox.cs" />
-    <Compile Include="Function\SQL.cs" />
-    <Compile Include="Function\Support.cs" />
+    <Compile Include="Code\External\E_ExportImages.cs" />
+    <Compile Include="Code\External\E_All.cs" />
+    <Compile Include="Code\External\E_Focus.cs" />
+    <Compile Include="Code\External\E_LoadForm.cs" />
+    <Compile Include="Code\External\E_Link.cs" />
+    <Compile Include="Code\Function\Controls\F_Excel.cs" />
+    <Compile Include="Code\Function\Controls\F_ListBox.cs" />
+    <Compile Include="Code\SQL.cs" />
+    <Compile Include="Code\Support.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

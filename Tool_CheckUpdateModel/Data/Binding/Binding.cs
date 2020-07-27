@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using System.Windows.Media;
 using Color = Autodesk.Revit.DB.Color;
 
-namespace Tool_CheckUpdateModel.Data
+namespace Tool_CheckUpdateModel.Data.Binding
 {
     public class Parameter_Settings
     {
@@ -24,6 +24,7 @@ namespace Tool_CheckUpdateModel.Data
     {
         public Element element { get; set; }
         public string element_text2 { get; set; }
+        public string element_type { get; set; }
         public bool link { get; set; }
         public string parameter_category_name { get; set; }
     }

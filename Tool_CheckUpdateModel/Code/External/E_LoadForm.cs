@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using Tool_CheckUpdateModel.Data;
+using Tool_CheckUpdateModel.Data.Binding;
 using ComboBox = System.Windows.Controls.ComboBox;
 
 namespace Tool_CheckUpdateModel.Function
