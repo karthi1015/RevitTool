@@ -11,11 +11,13 @@ using System.Windows;
 using System.Windows.Data;
 using System.Windows.Forms;
 using System.Windows.Input;
+using System.Windows.Media;
 using Tool_CheckUpdateModel.Code.Function.Type;
 using Tool_CheckUpdateModel.Data;
 using Tool_CheckUpdateModel.Data.Binding;
 using Tool_CheckUpdateModel.Function;
 using Tool_CheckUpdateModel.Function.Controls;
+using Application = System.Windows.Application;
 using ListViewItem = System.Windows.Controls.ListViewItem;
 using MessageBox = System.Windows.MessageBox;
 using Path = System.IO.Path;
@@ -415,10 +417,9 @@ namespace Tool_CheckUpdateModel
         //-------------------------------------------------------
         private void roll_back_Click(object sender, RoutedEventArgs e)
         {
-            F_ListBox.Roll_Back_Save_Data_Check(my_element_change, link_file, uiapp, doc_link, doc, my_parameter_settings);
-
             if (link_file.SelectedItem != null)
             {
+                F_ListBox.Roll_Back_Save_Data_Check(my_element_change, link_file, uiapp, doc_link, doc, my_parameter_settings);
                 data_revit_link item = (data_revit_link)link_file.SelectedItem;
                 doc_link = item.document;
                 my_element_change = new ObservableCollection<Element_Change>();

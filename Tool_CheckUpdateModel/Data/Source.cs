@@ -8,6 +8,7 @@ using Tool_CheckUpdateModel.Data.Binding;
 using Brush = System.Windows.Media.Brush;
 using Brushes = System.Windows.Media.Brushes;
 using Color = System.Windows.Media.Color;
+using ColorConverter = System.Windows.Media.ColorConverter;
 
 namespace Tool_CheckUpdateModel.Data
 {
@@ -37,7 +38,7 @@ namespace Tool_CheckUpdateModel.Data
         public static string Path_Options = @"C:\Users\" + Environment.UserName + "\\AppData\\Roaming\\Pentacons\\CheckUpdate\\Option";
         public static string Path_Excel = @"C:\Users\" + Environment.UserName + "\\AppData\\Roaming\\Pentacons\\CheckUpdate\\Source_Excel_Default";
 
-        public static Brush color_used_change = Brushes.Teal;
+        public static Brush color_used_change = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF00FFDC"));
         public static Brush color_not_change = Brushes.White;
     }
 }

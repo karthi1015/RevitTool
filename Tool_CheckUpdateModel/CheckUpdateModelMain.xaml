@@ -83,63 +83,6 @@
                         <Grid
                             Width="50">
                             <TextBlock
-                                Text="Check"
-                                VerticalAlignment="Bottom"
-                                HorizontalAlignment="Center"
-                                Foreground="{StaticResource PrimaryHueMidBrush}"/>
-                            <Button
-                                Style="{StaticResource MaterialDesignOutlinedButton}"
-                                Height="50"
-                                materialDesign:ButtonAssist.CornerRadius="5"
-                                Click="Check_Click">
-                                <materialDesign:PackIcon 
-                                    Kind="HeadSync" 
-                                    Width="30" Height="30"
-                                    Margin="-10 -20 -10 -10"/>
-                            </Button>
-                        </Grid>
-                        <Grid
-                            Width="50"
-                            Margin="20 0 0 0">
-                            <TextBlock
-                                Text="Export"
-                                VerticalAlignment="Bottom"
-                                HorizontalAlignment="Center"
-                                Foreground="{StaticResource PrimaryHueMidBrush}"/>
-                            <Button
-                                Style="{StaticResource MaterialDesignOutlinedButton}"
-                                Height="50"
-                                materialDesign:ButtonAssist.CornerRadius="5"
-                                Click="Export_Images">
-                                <materialDesign:PackIcon 
-                                    Kind="FileImageOutline" 
-                                    Width="30" Height="30"
-                                    Margin="-10 -20 -10 -10"/>
-                            </Button>
-                        </Grid>
-                        <Grid
-                            Width="50"
-                            Margin="20 0 0 0">
-                            <TextBlock
-                                Text="Export"
-                                VerticalAlignment="Bottom"
-                                HorizontalAlignment="Center"
-                                Foreground="{StaticResource PrimaryHueMidBrush}"/>
-                            <Button
-                                Style="{StaticResource MaterialDesignOutlinedButton}"
-                                Height="50"
-                                materialDesign:ButtonAssist.CornerRadius="5"
-                                Click="Export_Excel">
-                                <materialDesign:PackIcon 
-                                    Kind="MicrosoftExcel" 
-                                    Width="30" Height="30"
-                                    Margin="-10 -20 -10 -10"/>
-                            </Button>
-                        </Grid>
-                        <Grid
-                            Width="50"
-                            Margin="20 0 0 0">
-                            <TextBlock
                                 Text="Link"
                                 VerticalAlignment="Bottom"
                                 HorizontalAlignment="Center"
@@ -156,13 +99,9 @@
                                     Margin="-10 -20 -10 -10"/>
                             </Button>
                         </Grid>
-                    </StackPanel>
-                    <StackPanel 
-                        Orientation="Horizontal"
-                        VerticalAlignment="Stretch"
-                        Margin="10">
                         <Grid
-                            Width="50">
+                            Width="50"
+                            Margin="20 0 0 0">
                             <TextBlock
                                 Text="Source"
                                 VerticalAlignment="Bottom"
@@ -201,6 +140,29 @@
                                     Margin="-10 -20 -10 -10"/>
                             </Button>
                         </Grid>
+                    </StackPanel>
+                    <StackPanel 
+                        Orientation="Horizontal"
+                        VerticalAlignment="Stretch"
+                        Margin="10">
+                        <Grid
+                            Width="50">
+                            <TextBlock
+                                Text="Check"
+                                VerticalAlignment="Bottom"
+                                HorizontalAlignment="Center"
+                                Foreground="{StaticResource PrimaryHueMidBrush}"/>
+                            <Button
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Height="50"
+                                materialDesign:ButtonAssist.CornerRadius="5"
+                                Click="Check_Click">
+                                <materialDesign:PackIcon 
+                                    Kind="HeadSync" 
+                                    Width="30" Height="30"
+                                    Margin="-10 -20 -10 -10"/>
+                            </Button>
+                        </Grid>
                         <Grid
                             Width="50"
                             Margin="20 0 0 0">
@@ -217,6 +179,48 @@
                                 Click="roll_back_Click">
                                 <materialDesign:PackIcon 
                                     Kind="Autorenew" 
+                                    Width="30" Height="30"
+                                    Margin="-10 -20 -10 -10"/>
+                            </Button>
+                        </Grid>
+                    </StackPanel>
+                    <StackPanel 
+                        Orientation="Horizontal"
+                        VerticalAlignment="Stretch"
+                        Margin="10">
+                        <Grid
+                            Width="50">
+                            <TextBlock
+                                Text="Export"
+                                VerticalAlignment="Bottom"
+                                HorizontalAlignment="Center"
+                                Foreground="{StaticResource PrimaryHueMidBrush}"/>
+                            <Button
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Height="50"
+                                materialDesign:ButtonAssist.CornerRadius="5"
+                                Click="Export_Images">
+                                <materialDesign:PackIcon 
+                                    Kind="FileImageOutline" 
+                                    Width="30" Height="30"
+                                    Margin="-10 -20 -10 -10"/>
+                            </Button>
+                        </Grid>
+                        <Grid
+                            Width="50"
+                            Margin="20 0 0 0">
+                            <TextBlock
+                                Text="Export"
+                                VerticalAlignment="Bottom"
+                                HorizontalAlignment="Center"
+                                Foreground="{StaticResource PrimaryHueMidBrush}"/>
+                            <Button
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Height="50"
+                                materialDesign:ButtonAssist.CornerRadius="5"
+                                Click="Export_Excel">
+                                <materialDesign:PackIcon 
+                                    Kind="MicrosoftExcel" 
                                     Width="30" Height="30"
                                     Margin="-10 -20 -10 -10"/>
                             </Button>
@@ -251,82 +255,82 @@
         <Grid Grid.Column="1" Background="{StaticResource Tasbar}">
             <Grid 
               Visibility="{Binding ElementName=setting, Path=ToolTip, Converter={StaticResource StringToVisibleConverter}}">
-            <StackPanel 
+                <StackPanel 
                 Orientation="Horizontal"
                 VerticalAlignment="Top"
                 HorizontalAlignment="Left"
                 Margin="10 5 5 5">
-                <ComboBox
+                    <ComboBox
                         MinWidth="300"
                         Name="link_file"
                         materialDesign:HintAssist.Hint="Link file"
                         Style="{StaticResource MaterialDesignFloatingHintComboBox}"
                         DropDownOpened="Get_Link_File" 
                         DropDownClosed="Select_Link_File">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding name}"/>
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-            </StackPanel>
-            <ListView 
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding name}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+                <ListView 
                 SelectionMode="Single"
                 x:Name="data_update"
                 Margin="5 60 5 5">
-                <ListView.ContextMenu>
-                    <ContextMenu>
-                        <MenuItem Header="Change All" Click="Update_All_Click">
-                            <MenuItem.Icon>
-                                <Button
+                    <ListView.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="Change All" Click="Update_All_Click">
+                                <MenuItem.Icon>
+                                    <Button
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
                                     Height="30" Width="30"
                                     Style="{StaticResource MaterialDesignIconButton}"
                                     materialDesign:ShadowAssist.ShadowDepth="Depth5">
-                                    <materialDesign:PackIcon Kind="ElectronFramework" Height="20" Width="20"/>
-                                </Button>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                    </ContextMenu>
-                </ListView.ContextMenu>
-                <ListView.View>
-                    <GridView>
-                        <GridViewColumn>
-                            <GridViewColumn.CellTemplate>
-                                <DataTemplate>
-                                    <CheckBox
+                                        <materialDesign:PackIcon Kind="ElectronFramework" Height="20" Width="20"/>
+                                    </Button>
+                                </MenuItem.Icon>
+                            </MenuItem>
+                        </ContextMenu>
+                    </ListView.ContextMenu>
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn>
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox
                                             Click="Save_Data"
                                             Width="30" Height="30"
                                             IsChecked="{Binding changeORignore}"
                                             Style="{StaticResource MaterialDesignLightCheckBox}"/>
-                                </DataTemplate>
-                            </GridViewColumn.CellTemplate>
-                        </GridViewColumn>
-                        <GridViewColumn Header="Element Name">
-                            <GridViewColumn.CellTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding element_name}"
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Header="Element Name">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding element_name}"
                                                TextAlignment="Center"/>
-                                </DataTemplate>
-                            </GridViewColumn.CellTemplate>
-                        </GridViewColumn>
-                        <GridViewColumn 
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn 
                             Header="Role Change"           
                             Width="100">
-                            <GridViewColumn.CellTemplate>
-                                <DataTemplate>
-                                    <TextBlock 
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock 
                                     Text="{Binding type_change}"
                                     TextAlignment="Center"
                                     Width="90"/>
-                                </DataTemplate>
-                            </GridViewColumn.CellTemplate>
-                        </GridViewColumn>
-                        <GridViewColumn Header="Change">
-                            <GridViewColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Button
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Header="Change">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button
                                         Margin="10 0 0 0"
                                         Click="Update_Click"
                                         x:Name="change"
@@ -334,47 +338,47 @@
                                         Style="{StaticResource MaterialDesignIconButton}"
                                         Background="{DynamicResource MaterialDesignTextFieldBoxBackground}"
                                         ToolTip="Change"  >
-                                        <materialDesign:PackIcon Kind="ElectronFramework" Height="25" Width="25"/>
-                                    </Button>
-                                </DataTemplate>
-                            </GridViewColumn.CellTemplate>
-                        </GridViewColumn>
-                    </GridView>
-                </ListView.View>
-                <ListView.ItemContainerStyle>
-                    <Style TargetType="ListViewItem">
-                        <EventSetter Event="MouseLeftButtonUp" Handler="High_Light_Click" />
-                        <EventSetter Event="PreviewGotKeyboardFocus" Handler="SelectCurrentItem"/>
-                        <Setter Property="ToolTip" Value="{Binding preview}"/>
-                        <Setter Property="Foreground" Value="{Binding color, Mode=TwoWay}"/>
-                        <Setter Property="MinHeight" Value="35"/>
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="ListBoxItem">
-                                    <Border x:Name="Border"
+                                            <materialDesign:PackIcon Kind="ElectronFramework" Height="25" Width="25"/>
+                                        </Button>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                        </GridView>
+                    </ListView.View>
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <EventSetter Event="MouseLeftButtonUp" Handler="High_Light_Click" />
+                            <EventSetter Event="PreviewGotKeyboardFocus" Handler="SelectCurrentItem"/>
+                            <Setter Property="ToolTip" Value="{Binding preview}"/>
+                            <Setter Property="Foreground" Value="{Binding color, Mode=TwoWay}"/>
+                            <Setter Property="MinHeight" Value="35"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Border x:Name="Border"
                                                 Background="{TemplateBinding Background}"
                                                 BorderBrush="{DynamicResource MaterialDesignDivider}"
                                                 BorderThickness="0,0,0,1"
                                                 SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}">
-                                        <GridViewRowPresenter VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
-                                    </Border>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                        <Style.Triggers>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="Background" Value="{DynamicResource MaterialDesignSelection}"/>
-                            </Trigger>
-                            <Trigger Property="IsMouseOver"  Value="True">
-                                <Setter Property="Background" Value="{DynamicResource MaterialDesignDivider}"/>
-                            </Trigger>
-                            <!--<Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                            <GridViewRowPresenter VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="{DynamicResource MaterialDesignSelection}"/>
+                                </Trigger>
+                                <Trigger Property="IsMouseOver"  Value="True">
+                                    <Setter Property="Background" Value="{DynamicResource MaterialDesignDivider}"/>
+                                </Trigger>
+                                <!--<Trigger Property="IsKeyboardFocusWithin" Value="True">
                                         <Setter Property="IsSelected" Value="True"/>
                                     </Trigger>-->
-                        </Style.Triggers>
-                    </Style>
-                </ListView.ItemContainerStyle>
-            </ListView>
+                            </Style.Triggers>
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                </ListView>
             </Grid>
             <ListBox
                 MinWidth="300"
