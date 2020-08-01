@@ -10,14 +10,14 @@ using System.Windows;
 using System.Windows.Controls;
 using TextBox = System.Windows.Controls.TextBox;
 
-namespace WEB_SaveAs
+namespace Allplan_ParameterSupport
 {
-    class FunctionSQL
+    class SQL
     {
-        string type = "StoredProcedure";
+        static string type = "StoredProcedure";
 
         //Read-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        public DataTable SQLRead(string connectString, string procedure, string commandType, List<string> parameters, List<string> parametersValue)
+        public static DataTable SQLRead(string connectString, string procedure, string commandType, List<string> parameters, List<string> parametersValue)
         {
             DataTable dtNew = new DataTable();
             try
@@ -42,15 +42,15 @@ namespace WEB_SaveAs
                 commandDelete.ExecuteNonQuery();
                 connection.Close();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                MessageBox.Show(ex.Message);
+
             }
             return dtNew;
         }
 
         //Write-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        public string SQLWrite(string connectString, string procedure, string commandType, List<string> parameters, List<object> parametersValue)
+        public static string SQLWrite(string connectString, string procedure, string commandType, List<string> parameters, List<string> parametersValue)
         {
             try
             {
@@ -72,15 +72,14 @@ namespace WEB_SaveAs
                 connection.Close();
                 return "S";
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                MessageBox.Show(ex.Message);
                 return "F";
             }
         }
 
         //Delete-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        public string SQLDelete(string connectString, string procedure, string commandType, List<string> parameters, List<object> parametersValue)
+        public static string SQLDelete(string connectString, string procedure, string commandType, List<string> parameters, List<string> parametersValue)
         {
             try
             {
@@ -102,9 +101,8 @@ namespace WEB_SaveAs
                 connection.Close();
                 return "S";
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                MessageBox.Show(ex.Message);
                 return "F";
             }
         }

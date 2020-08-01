@@ -119,6 +119,7 @@ namespace SetupTool_MaterialSetup
             {
                 List<string> combobox_don_vi = new List<string>();
                 combobox_don_vi.Add("");
+                combobox_don_vi.Add("Default");
 
                 var listtotal = mySQL.SQLRead(myAll_Data.list_path_connect_SQL_data[3], "dbo.spVW_WorkIdDesCription_UserMaterial", mySource.type_Procedure, new List<string>(), new List<string>());
                 int rows = listtotal.Rows.Count;

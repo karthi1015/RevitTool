@@ -36,13 +36,13 @@ namespace Tool_CheckUpdateModel
             {
                 Transaction tr = new Transaction(doc);
                 tr.Start("UpdateModel");
-                CheckUpdateModelMain viewWPF = new CheckUpdateModelMain(uiapp);
-                viewWPF.Owner = wnd;
-                viewWPF.Show();
+                //CheckUpdateModelMain viewWPF = new CheckUpdateModelMain(uiapp);
+                //viewWPF.Owner = wnd;
+                //viewWPF.Show();
 
                 //Get_Elevation_Ceilings(doc);
 
-                //Change_Data_Material(doc);
+                Change_Data_Material(doc);
 
                 tr.Commit();
 
@@ -54,6 +54,15 @@ namespace Tool_CheckUpdateModel
                 return Result.Failed;
             }
             return Result.Succeeded;
+        }
+
+        public static string PrintOutRevitUnitInfo(UnitType ut, FormatOptions obj, string indent)
+        {
+            string msg = "";
+
+            msg += string.Format(indent + "\tUnit display: {0} ({1})" + Environment.NewLine, LabelUtils.GetLabelFor(obj.DisplayUnits), obj.DisplayUnits);
+
+            return msg;
         }
 
         public void Get_Elevation_Ceilings(Document doc)

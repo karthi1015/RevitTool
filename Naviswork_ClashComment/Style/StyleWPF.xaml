@@ -17,6 +17,12 @@
     <!--Backgroud toàn bộ giao diện!-->
     <SolidColorBrush x:Key="Main" Color="#FF4A555B"/>
 
+    <!--Foreground header!-->
+    <SolidColorBrush x:Key="header" Color="Orange"/>
+
+    <!--Foreground textbutton!-->
+    <SolidColorBrush x:Key="textbutton" Color="Teal"/>
+
     <!--Style của Grid thanh Tasbar-->
     <Style TargetType="Grid" x:Key="tasbar">
         <Setter Property="Background" Value="{StaticResource Tasbar}"/>
@@ -59,8 +65,9 @@
         <Setter Property="BorderThickness" Value="0"/>
     </Style>-->
     <Style TargetType="GridViewColumnHeader" x:Key="BaseOnGridView">
-        <Setter Property="Padding" Value="5 0 0 0"/>
-        <Setter Property="HorizontalContentAlignment" Value="Left" />
+        <Setter Property="Margin" Value="10 0 0 0"/>
+        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="TextBlock.FontWeight" Value="Medium" />
         <Setter Property="OverridesDefaultStyle" Value="True" />

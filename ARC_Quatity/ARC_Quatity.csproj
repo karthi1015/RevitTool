@@ -6,6 +6,8 @@
       None
     </ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
     <TargetFrameworkProfile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -22,7 +24,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\00 Ribbon_Mr.W\DLL\</OutputPath>
+    <OutputPath>..\..\00 Ribbon_Mr.W\DLL\ARC_Quantity\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -40,6 +42,10 @@
     <StartProgram>$(ProgramW6432)\Autodesk\Revit 2019\Revit.exe</StartProgram>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="BCrypt.Net-Core, Version=1.6.0.0, Culture=neutral, PublicKeyToken=4d63bfbfdfd3c6e4, processorArchitecture=MSIL">
+      <HintPath>..\packages\BCrypt.Net-Core.1.6.0\lib\net452\BCrypt.Net-Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="LiveCharts, Version=0.9.7.0, Culture=neutral, PublicKeyToken=0bc1f845d1ebb8df, processorArchitecture=MSIL">
       <HintPath>..\packages\LiveCharts.0.9.7\lib\net45\LiveCharts.dll</HintPath>
       <Private>True</Private>
@@ -48,11 +54,22 @@
       <HintPath>..\packages\LiveCharts.Wpf.0.9.7\lib\net45\LiveCharts.Wpf.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="MaterialDesignColors, Version=1.2.6.1513, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MaterialDesignColors.1.2.6\lib\net45\MaterialDesignColors.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="MaterialDesignThemes.Wpf, Version=3.1.3.1513, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MaterialDesignThemes.3.1.3\lib\net45\MaterialDesignThemes.Wpf.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.Office.Interop.Excel, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <EmbedInteropTypes>True</EmbedInteropTypes>
       <HintPath>..\..\..\00 Document\00 Source\Microsoft.Office.Interop.Excel.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
@@ -66,6 +83,8 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Data.Linq" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Windows" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xaml" />
@@ -73,20 +92,33 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ARC_Quatity.cs" />
-    <Compile Include="Data\ListBinding.cs" />
-    <Compile Include="Data\ListConvert.cs" />
-    <Compile Include="Data\ListSource.cs" />
-    <Compile Include="Data\ListTXT.cs" />
-    <Compile Include="Function\FunctionExternal.cs" />
-    <Compile Include="Function\FunctionSQL.cs" />
-    <Compile Include="Function\FunctionSupoort.cs" />
+    <Compile Include="Code\FunctionWEB\F_QuantityNotes.cs" />
+    <Compile Include="Code\Function\F_Chart.cs" />
+    <Compile Include="Code\Function\F_GetElement.cs" />
+    <Compile Include="Code\Function\F_GetSchema.cs" />
+    <Compile Include="Code\Function\F_GetMaterial.cs" />
+    <Compile Include="Code\Function\F_GetQuantity.cs" />
+    <Compile Include="Code\Function\F_Upload.cs" />
+    <Compile Include="Data\BindingWEB\B_DataNotes.cs" />
+    <Compile Include="Data\BindingWEB\B_Notes.cs" />
+    <Compile Include="Data\BindingWEB\B_Status.cs" />
+    <Compile Include="Data\Binding\B_Descipline.cs" />
+    <Compile Include="Data\Binding\B_ElementLink.cs" />
+    <Compile Include="Data\Binding\B_FileLink.cs" />
+    <Compile Include="Data\Binding\B_Quantity.cs" />
+    <Compile Include="Data\Binding\B_Unit.cs" />
+    <Compile Include="Code\Convert.cs" />
+    <Compile Include="Data\Source.cs" />
+    <Compile Include="Code\E_VisibleLink.cs" />
+    <Compile Include="Code\SQL.cs" />
+    <Compile Include="Code\Support.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UI\UserControl1.xaml.cs">
       <DependentUpon>UserControl1.xaml</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Page Include="StyleTemplate\StyleWPF.xaml">
+    <Page Include="Style\StyleWPF.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -113,5 +145,12 @@
   <Target Name="AfterClean">
     <Delete Files="$(AppData)\Autodesk\REVIT\Addins\2019\ARC_Quatity.addin" />
     <Delete Files="$(AppData)\Autodesk\REVIT\Addins\2019\ARC_Quatity.dll" />
+  </Target>
+  <Import Project="..\packages\MaterialDesignThemes.3.1.3\build\MaterialDesignThemes.targets" Condition="Exists('..\packages\MaterialDesignThemes.3.1.3\build\MaterialDesignThemes.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\MaterialDesignThemes.3.1.3\build\MaterialDesignThemes.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\MaterialDesignThemes.3.1.3\build\MaterialDesignThemes.targets'))" />
   </Target>
 </Project>

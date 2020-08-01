@@ -6,12 +6,10 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:local="clr-namespace:Tool_CheckUpdateModel"
-    xmlns:convert="clr-namespace:Tool_CheckUpdateModel.Data"
-    Height="450" 
-    Width="800"
+    xmlns:convert="clr-namespace:Tool_CheckUpdateModel.Data" 
     MinHeight="1000"
     MinWidth="300"
-    MaxHeight="500"
+    MaxHeight="1000"
     MaxWidth="1000"
     Background="{DynamicResource MaterialDesignPaper}"
     TextElement.Foreground="{DynamicResource MaterialDesignBody}"
@@ -42,13 +40,6 @@
                     <SolidColorBrush x:Key="PrimaryHueMidForegroundBrush" Color="Black"/>
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
-            <!--<Style TargetType="ComboBox" BasedOn="{StaticResource MaterialDesignComboBox}"/>
-            <Style TargetType="ScrollBar" BasedOn="{StaticResource MaterialDesignScrollBar}"/>
-            <Style TargetType="ProgressBar" BasedOn="{StaticResource MaterialDesignCircularProgressBar}"/>
-            <Style TargetType="ListBox" BasedOn="{StaticResource MaterialDesignListBox}"/>
-            <Style TargetType="CheckBox" BasedOn="{StaticResource MaterialDesignAccentCheckBox}"/>-->
-            <!--<Style TargetType="ListView" BasedOn="{StaticResource BaseOnListView}"/>-->
-            <!--<Style TargetType="ListViewItem" BasedOn="{StaticResource BaseOnListViewItem}"/>-->
             <Style TargetType="GridViewColumnHeader" BasedOn="{StaticResource BaseOnGridView}"/>
 
             <convert:BoolToVisibleConverter x:Key="BoolToVisibleConverter"/>
@@ -74,8 +65,8 @@
                         HorizontalAlignment="Stretch">
                     <Label 
                         Content="Controls :" 
-                        Foreground="{StaticResource header}"
-/>
+                        Foreground="{StaticResource header}"/>
+                    
                     <StackPanel 
                         Orientation="Horizontal"
                         VerticalAlignment="Center"

@@ -10,7 +10,7 @@ using Color = Autodesk.Revit.DB.Color;
 
 namespace Allplan_ParameterSupport
 {
-    public class Data
+    class Data
     {
         public string single_value { get; set; }
 
@@ -25,6 +25,7 @@ namespace Allplan_ParameterSupport
         public Brush color { get; set; }
 
         public string color_sort { get; set; }
+        public string descipline { get; set; }
     }
 
 

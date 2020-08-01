@@ -18,17 +18,9 @@ using System.Linq;
 
 namespace Allplan_ParameterSupport
 {
-    //ExternalEventClass myExampleDraw;
-    //ExternalEvent Draw;
-
-    //myExampleDraw = new ExternalEventClass();
-    //Draw = ExternalEvent.Create(myExampleDraw);
-
-    //Draw.Raise();
-    public class ExternalEventClass : IExternalEventHandler
+    public class E_AllplanData : IExternalEventHandler
     {
         public ListView thong_tin_parameter { get; set; }
-        public All_Data myAll_Data { get; set; }
 
         public void Execute(UIApplication uiapp)
         {
@@ -57,7 +49,7 @@ namespace Allplan_ParameterSupport
         }
         public string GetName()
         {
-            return "External Event Example";
+            return "Parameters";
         }
 
         //----------------------------------------------------------
@@ -69,11 +61,11 @@ namespace Allplan_ParameterSupport
                 for (int i = 0; i < thong_tin_parameter.Items.Count; i++)
                 {
                     Data item = (Data)thong_tin_parameter.Items[i];
-                    item.cau_kien.LookupParameter(myAll_Data.list_parameter_share_data[2]).Set(item.ten_cau_kien);
-                    item.cau_kien.LookupParameter(myAll_Data.list_parameter_share_data[3]).Set(item.id_cau_kien);
-                    item.cau_kien.LookupParameter(myAll_Data.list_parameter_share_data[4]).Set(item.level_cau_kien);
+                    item.cau_kien.LookupParameter(Source.share_para_text1).Set(item.ten_cau_kien);
+                    item.cau_kien.LookupParameter(Source.share_para_text2).Set(item.id_cau_kien);
+                    item.cau_kien.LookupParameter(Source.share_para_text3).Set(item.level_cau_kien);
+                    item.cau_kien.LookupParameter(Source.share_para_class).Set(item.descipline);
                 }
-                //add_number_element(uidoc, doc);
                 result = "S";
             }
             catch (Exception)

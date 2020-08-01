@@ -111,7 +111,8 @@ namespace SetupTool_TypeSetup
 
                     foreach (Parameters_Family parameters in myParameters_Family)
                     {
-                        symbol.LookupParameter(parameters.parameter.Definition.Name).Set(Convert.ToDouble(parameters.gia_tri_parameter) / myAll_Data.list_unit_value_data[1]);
+                        if (symbol.LookupParameter(parameters.parameter.Definition.Name).StorageType == StorageType.Integer) symbol.LookupParameter(parameters.parameter.Definition.Name).Set(Convert.ToDouble(parameters.gia_tri_parameter));
+                        else symbol.LookupParameter(parameters.parameter.Definition.Name).Set(Convert.ToDouble(parameters.gia_tri_parameter) / myAll_Data.list_unit_value_data[1]);
                     }
                     foreach (Material_Family material in myMaterial_Family)
                     {

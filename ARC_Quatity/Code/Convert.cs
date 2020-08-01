@@ -12,7 +12,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using Visibility = System.Windows.Visibility;
 
-namespace WEB_SaveAs
+namespace ARC_Quatity.Code
 {
     public class SortStringNumbers : IComparer<string>
     {
@@ -22,14 +22,6 @@ namespace WEB_SaveAs
         public int Compare(string x, string y)
         {
             return StrCmpLogicalW(x, y);
-        }
-    }
-
-    public class SortObjectNumbers : IComparer<Quatity>
-    {
-        public int Compare(Quatity x, Quatity y)
-        {
-            return x.level.CompareTo(y.level);
         }
     }
 

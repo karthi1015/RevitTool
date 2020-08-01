@@ -10,14 +10,14 @@ using System.Windows;
 using System.Windows.Controls;
 using TextBox = System.Windows.Controls.TextBox;
 
-namespace Allplan_ParameterSupport
+namespace ARC_Quatity
 {
-    class FunctionSQL
+    class SQL
     {
-        string type = "StoredProcedure";
+        static string type = "StoredProcedure";
 
         //Read-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        public DataTable SQLRead(string connectString, string procedure, string commandType, List<string> parameters, List<string> parametersValue)
+        public static DataTable SQLRead(string connectString, string procedure, string commandType, List<string> parameters, List<string> parametersValue)
         {
             DataTable dtNew = new DataTable();
             try
@@ -42,15 +42,15 @@ namespace Allplan_ParameterSupport
                 commandDelete.ExecuteNonQuery();
                 connection.Close();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
+                MessageBox.Show(ex.Message);
             }
             return dtNew;
         }
 
         //Write-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        public string SQLWrite(string connectString, string procedure, string commandType, List<string> parameters, List<string> parametersValue)
+        public static string SQLWrite(string connectString, string procedure, string commandType, List<string> parameters, List<object> parametersValue)
         {
             try
             {
@@ -72,14 +72,15 @@ namespace Allplan_ParameterSupport
                 connection.Close();
                 return "S";
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                MessageBox.Show(ex.Message);
                 return "F";
             }
         }
 
         //Delete-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        public string SQLDelete(string connectString, string procedure, string commandType, List<string> parameters, List<string> parametersValue)
+        public static string SQLDelete(string connectString, string procedure, string commandType, List<string> parameters, List<object> parametersValue)
         {
             try
             {
@@ -101,8 +102,9 @@ namespace Allplan_ParameterSupport
                 connection.Close();
                 return "S";
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                MessageBox.Show(ex.Message);
                 return "F";
             }
         }

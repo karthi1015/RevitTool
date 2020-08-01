@@ -149,13 +149,13 @@ namespace UI_Ribbon
 
         //------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         //Create a push button to trigger a command add it to the ribbon panel.
-        string tabName = "Pentacons";
-        string pathDll = @"\\192.168.1.250\data\DataBases\01 RevitDataBases\04 Add_in\01 Revit_API\DLL\";
-        string pathImage = @"\\192.168.1.250\data\DataBases\01 RevitDataBases\04 Add_in\01 Revit_API\Resources\Image\";
+        //string tabName = "Pentacons";
+        //string pathDll = @"\\192.168.1.250\data\DataBases\01 RevitDataBases\04 Add_in\01 Revit_API\DLL\";
+        //string pathImage = @"\\192.168.1.250\data\DataBases\01 RevitDataBases\04 Add_in\01 Revit_API\Resources\Image\";
 
-        //string tabName = "W";
-        //string pathDll = @"D:\00 CuaKhanh\03 Revit\00 Ribbon_Mr.W\DLL\";
-        //string pathImage = @"D:\00 CuaKhanh\03 Revit\00 Ribbon_Mr.W\Image\";
+        string tabName = "W";
+        string pathDll = @"D:\00 CuaKhanh\03 Revit\00 Ribbon_Mr.W\DLL\";
+        string pathImage = @"D:\00 CuaKhanh\03 Revit\00 Ribbon_Mr.W\Image\";
         public void AddRibbonPanel(UIControlledApplication application, string addin)
         {
             //add danh sách addin
@@ -267,7 +267,7 @@ namespace UI_Ribbon
                     if (addin.Contains(AddIn_Add[8]))
                     {
                         //Filter Tool
-                        PushButton pushButton = ribbonAll.AddItem(create_pushdata(new List<string>() { "Allplan_ParameterSupport.dll", "Allplan" + "\r\n" + "Parameters", "Allplan_ParameterSupport.Allplan_ParameterSupport", "addUniqueId.png", "Thêm, cập nhật thông tin cho mô hình trên liên kết trên Allplan và WEB" })) as PushButton;
+                        PushButton pushButton = ribbonAll.AddItem(create_pushdata(new List<string>() { "Allplan_ParameterSupport\\Allplan_ParameterSupport.dll", "Allplan" + "\r\n" + "Parameters", "Allplan_ParameterSupport.Allplan_ParameterSupport", "addUniqueId.png", "Thêm, cập nhật thông tin cho mô hình trên liên kết trên Allplan và WEB" })) as PushButton;
                     }
                 }
                 catch (Exception) { }

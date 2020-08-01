@@ -32,42 +32,6 @@ namespace Naviswork_ClashComment
     public partial class UserControl1 : Window
     {
         //----------------------------------------------------------------------------------------------------------------------------------------
-        #region Funtion Toolbar
-        private void Quit(object sender, RoutedEventArgs e)
-        {
-            Close();
-        }
-
-        private void Maximize(object sender, RoutedEventArgs e)
-        {
-            WindowState state_maximize = this.WindowState;
-            if (state_maximize == WindowState.Normal)
-            {
-                this.WindowState = WindowState.Maximized;
-                max.ToolTip = "Normal";
-            }
-            else if (state_maximize == WindowState.Maximized)
-            {
-                this.WindowState = WindowState.Normal;
-                max.ToolTip = "Maximize";
-            }
-        }
-
-        private void Minimize(object sender, RoutedEventArgs e)
-        {
-            this.WindowState = WindowState.Minimized;
-        }
-
-        private void Drag(object sender, MouseButtonEventArgs e)
-        {
-            if (e.LeftButton == MouseButtonState.Pressed)
-            {
-                DragMove();
-            }
-        }
-        #endregion
-
-        //----------------------------------------------------------------------------------------------------------------------------------------
         #region Khai bao Instance
         UIApplication uiapp;
         UIDocument uidoc;
@@ -115,7 +79,6 @@ namespace Naviswork_ClashComment
                     List<string> Para2_Values = new List<string>() { project_number };
                     var listtotal = SQL.SQLRead(SQL.path_connect_SQL_FileStream, "dbo.sp_ReadData_FromClashDetective", Source.type_Procedure, Para2, Para2_Values);
                     ObservableCollection<parent> parent_support = new ObservableCollection<parent>();
-                    List<string> check_status = new List<string>();
                     for (var i = 0; i < listtotal.Rows.Count; i++)
                     {
                         parent_support.Add(new parent()
@@ -125,6 +88,8 @@ namespace Naviswork_ClashComment
                             clash_file_name = listtotal.Rows[i]["FilesName"].ToString()
                         });
                     }
+                    status_data status_Data = Source.list_status_parent[0];
+
                     my_parent = new ObservableCollection<parent>(parent_support.GroupBy(x => new
                     {
                         x.clash_parent
@@ -132,14 +97,14 @@ namespace Naviswork_ClashComment
                     .Select(z => new parent()
                     {
                         clash_parent = z.Key.clash_parent,
-                        status_parent = Source.list_status_parent[0].name,
-                        color = Source.list_status_parent[0].color,
+                        status_parent = status_Data.name,
+                        color = status_Data.color,
                         clash_file_name = z.First().clash_file_name
                     }));
 
                     thong_tin_clash_parent.ItemsSource = my_parent;
                     CollectionView view = (CollectionView)CollectionViewSource.GetDefaultView(thong_tin_clash_parent.ItemsSource);
-                    view.SortDescriptions.Add(new SortDescription("clash_parent", ListSortDirection.Descending));
+                    view.SortDescriptions.Add(new SortDescription("clash_parent", ListSortDirection.Ascending));
                 }
             }
             catch (Exception ex)

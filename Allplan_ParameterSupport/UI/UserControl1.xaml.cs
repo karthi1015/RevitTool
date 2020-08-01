@@ -27,36 +27,17 @@ namespace Allplan_ParameterSupport
     /// </summary>
     public partial class UserControl1 : Window
     {
-        FunctionSQL mySQL;
-        FunctionSupoort myFunctionSupport;
-        ListSource mySource;
-
         UIApplication uiapp;
         UIDocument uidoc;
         Document doc;
 
-        ExternalEventClass myExampleDraw;
-        ExternalEvent Draw;
+        E_AllplanData my_allplan_data;
+        ExternalEvent e_allplan_data;
 
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------
-        private void Window_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            if (e.LeftButton == MouseButtonState.Pressed)
-            {
-                DragMove();
-            }
-        }
-
-        private void closeWindow(object sender, RoutedEventArgs e)
-        {
-            Close();
-        }
+        ObservableCollection<Data> list_data { get; set; }
 
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------
-        public ObservableCollection<Data> list_data { get; set; }
-
-        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
-        public string path = "";
         public UserControl1(UIApplication _uiapp)
         {
             InitializeComponent();
@@ -64,50 +45,11 @@ namespace Allplan_ParameterSupport
             uidoc = uiapp.ActiveUIDocument;
             doc = uidoc.Document;
 
-            myExampleDraw = new ExternalEventClass();
-            Draw = ExternalEvent.Create(myExampleDraw);
+            my_allplan_data = new E_AllplanData();
+            e_allplan_data = ExternalEvent.Create(my_allplan_data);
 
-            mySQL = new FunctionSQL();
-            myFunctionSupport = new FunctionSupoort();
-            mySource = new ListSource();
-
-            
-            var listtotal = mySQL.SQLRead(@"Server=18.141.116.111,1433\SQLEXPRESS;Database=ManageDataBase;User Id=ManageUser; Password = manage@connect789", "Select * from dbo.PathSource", "Query", new List<string>(), new List<string>());
-            path = listtotal.Rows[0][1].ToString();
-            Function_TXT();
-
-            Function_Dau_Vao();
+            Them_Data_Vao_List_View();
         }
-        //----------------------------------------------------------
-        public void Function_Dau_Vao()
-        {
-            try
-            {
-                myFunctionSupport.Default_Image(myAll_Data, new List<Image>() { logo_image, add_image, refresh_image });
-
-                Them_Data_Vao_List_View();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-            
-        }
-
-        //----------------------------------------------------------
-        public All_Data myAll_Data { get; set; }
-        public void Function_TXT()
-        {
-            try
-            {
-                myAll_Data = myFunctionSupport.Get_Data_All(path);
-            }
-            catch (Exception)
-            {
-
-            }
-        }
-
         //----------------------------------------------------------
         public void Them_Data_Vao_List_View()
         {
@@ -138,19 +80,19 @@ namespace Allplan_ParameterSupport
                         FamilyInstance familyInstance = model as FamilyInstance;
                         if (familyInstance.SuperComponent == null)
                         {
-                            myFunctionSupport.Add_Data_Listview(model, model, myAll_Data, list_data);
+                            Support.Add_Data_Listview(model, model, list_data);
                             List<ElementId> elements_child = familyInstance.GetSubComponentIds().ToList();
                             foreach(ElementId id in elements_child)
                             {
                                 FamilyInstance model_child = doc.GetElement(id) as FamilyInstance;
-                                myFunctionSupport.Add_Data_Listview(model, model_child, myAll_Data, list_data);
+                                Support.Add_Data_Listview(model, model_child, list_data);
                                 Support_Foreach(model, model_child);
                             }
                         }
                     }
                     else
                     {
-                        myFunctionSupport.Add_Data_Listview(model, model, myAll_Data, list_data);
+                        Support.Add_Data_Listview(model, model, list_data);
                     }
                 }
                 thong_tin_parameter.ItemsSource = list_data;
@@ -159,6 +101,7 @@ namespace Allplan_ParameterSupport
                 view.SortDescriptions.Add(new SortDescription("color_sort", ListSortDirection.Ascending));
                 view.SortDescriptions.Add(new SortDescription("level_cau_kien", ListSortDirection.Ascending));
                 view.SortDescriptions.Add(new SortDescription("ten_cau_kien", ListSortDirection.Ascending));
+                view.SortDescriptions.Add(new SortDescription("id_cau_kien", ListSortDirection.Ascending));
 
                 view.Filter = Filter_ten_vat_lieu;
 
@@ -180,7 +123,7 @@ namespace Allplan_ParameterSupport
                     foreach (ElementId id_for in model_child.GetSubComponentIds())
                     {
                         model_child = doc.GetElement(id_for) as FamilyInstance;
-                        myFunctionSupport.Add_Data_Listview(model, model_child, myAll_Data, list_data);
+                        Support.Add_Data_Listview(model, model_child, list_data);
                         Support_Foreach(model, model_child);
                     }
                 }
@@ -194,10 +137,12 @@ namespace Allplan_ParameterSupport
         //----------------------------------------------------------
         private bool Filter_ten_vat_lieu(object item)
         {
-            if (search_material_project.Text == "...")
+            if (string.IsNullOrEmpty(search_material_project.Text))
                 return true;
             else
-                return ((item as Data).level_cau_kien.IndexOf(search_material_project.Text, StringComparison.OrdinalIgnoreCase) >= 0);
+                return ((item as Data).level_cau_kien.IndexOf(search_material_project.Text, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    (item as Data).ten_cau_kien.IndexOf(search_material_project.Text, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    (item as Data).id_cau_kien.IndexOf(search_material_project.Text, StringComparison.OrdinalIgnoreCase) >= 0);
         }
 
         //----------------------------------------------------------
@@ -205,10 +150,7 @@ namespace Allplan_ParameterSupport
         {
             try
             {
-                if (search_material_project.Text != "...")
-                {
-                    CollectionViewSource.GetDefaultView(thong_tin_parameter.ItemsSource).Refresh();
-                }
+                CollectionViewSource.GetDefaultView(thong_tin_parameter.ItemsSource).Refresh();
             }
             catch (Exception ex)
             {
@@ -250,9 +192,8 @@ namespace Allplan_ParameterSupport
         {
             try
             {
-                myExampleDraw.thong_tin_parameter = thong_tin_parameter;
-                myExampleDraw.myAll_Data = myAll_Data;
-                Draw.Raise();
+                my_allplan_data.thong_tin_parameter = thong_tin_parameter;
+                e_allplan_data.Raise();
             }
             catch (Exception ex)
             {
@@ -277,22 +218,22 @@ namespace Allplan_ParameterSupport
 
                 foreach (Element ele in element)
                 {
-                    if (ele.LookupParameter(myAll_Data.list_parameter_share_data[0]) != null && ele.LookupParameter(myAll_Data.list_parameter_share_data[1]) != null)
+                    if (ele.LookupParameter(Source.share_para_name) != null && ele.LookupParameter(Source.share_para_level) != null)
                     {
                         if (ele.Category.Name == "Structural Framing")
                         {
                             elements_2.Add(ele);
-                            name_level_2.Add(ele.LookupParameter(myAll_Data.list_parameter_share_data[0]).AsString() + "|" + ele.LookupParameter(myAll_Data.list_parameter_share_data[1]).AsString());
+                            name_level_2.Add(ele.LookupParameter(Source.share_para_name).AsString() + "|" + ele.LookupParameter(Source.share_para_level).AsString());
                         }
                         else if (ele.Category.Name == "Floors")
                         {
                             elements_3.Add(ele);
-                            name_level_3.Add(ele.LookupParameter(myAll_Data.list_parameter_share_data[0]).AsString() + "|" + ele.LookupParameter(myAll_Data.list_parameter_share_data[1]).AsString());
+                            name_level_3.Add(ele.LookupParameter(Source.share_para_name).AsString() + "|" + ele.LookupParameter(Source.share_para_level).AsString());
                         }
                         else
                         {
                             elements_1.Add(ele);
-                            name_level_1.Add(ele.LookupParameter(myAll_Data.list_parameter_share_data[0]).AsString() + "|" + ele.LookupParameter(myAll_Data.list_parameter_share_data[1]).AsString());
+                            name_level_1.Add(ele.LookupParameter(Source.share_para_name).AsString() + "|" + ele.LookupParameter(Source.share_para_level).AsString());
                         }
                     }
                 }
@@ -306,7 +247,7 @@ namespace Allplan_ParameterSupport
                     List<Element> elements_list_1_1 = new List<Element>();
                     foreach (Element ele in elements_1)
                     {
-                        if (ele.LookupParameter(myAll_Data.list_parameter_share_data[0]).AsString() + "|" + ele.LookupParameter(myAll_Data.list_parameter_share_data[1]).AsString() == level)
+                        if (ele.LookupParameter(Source.share_para_name).AsString() + "|" + ele.LookupParameter(Source.share_para_level).AsString() == level)
                         {
                             elements_list_1_1.Add(ele);
                         }
@@ -320,7 +261,7 @@ namespace Allplan_ParameterSupport
                     List<Element> elements_list_1_1 = new List<Element>();
                     foreach (Element ele in elements_2)
                     {
-                        if (ele.LookupParameter(myAll_Data.list_parameter_share_data[0]).AsString() + "|" + ele.LookupParameter(myAll_Data.list_parameter_share_data[1]).AsString() == level)
+                        if (ele.LookupParameter(Source.share_para_name).AsString() + "|" + ele.LookupParameter(Source.share_para_level).AsString() == level)
                         {
                             elements_list_1_1.Add(ele);
                         }
@@ -334,7 +275,7 @@ namespace Allplan_ParameterSupport
                     List<Element> elements_list_1_1 = new List<Element>();
                     foreach (Element ele in elements_3)
                     {
-                        if (ele.LookupParameter(myAll_Data.list_parameter_share_data[0]).AsString() + "|" + ele.LookupParameter(myAll_Data.list_parameter_share_data[1]).AsString() == level)
+                        if (ele.LookupParameter(Source.share_para_name).AsString() + "|" + ele.LookupParameter(Source.share_para_level).AsString() == level)
                         {
                             elements_list_1_1.Add(ele);
                         }
@@ -356,9 +297,9 @@ namespace Allplan_ParameterSupport
                 {
                     foreach (Element e in ele)
                     {
-                        if (e.LookupParameter(myAll_Data.list_parameter_share_data[5]) != null)
+                        if (e.LookupParameter(Source.share_para_text4) != null)
                         {
-                            e.LookupParameter(myAll_Data.list_parameter_share_data[5]).Set(1.ToString());
+                            e.LookupParameter(Source.share_para_text4).Set(1.ToString());
                         }
                     }
                 }

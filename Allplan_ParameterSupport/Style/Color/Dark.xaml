@@ -1,0 +1,41 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:po="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options">
+    <!--<Color x:Key="ValidationErrorColor">#f44336</Color>
+    <SolidColorBrush x:Key="ValidationErrorBrush" Color="{StaticResource ValidationErrorColor}"/>
+    <SolidColorBrush x:Key="MaterialDesignBackground" po:Freeze="True" Color="#FF000000"/>
+    <SolidColorBrush x:Key="MaterialDesignPaper" po:Freeze="True" Color="#FF303030"/>
+    <SolidColorBrush x:Key="MaterialDesignCardBackground" po:Freeze="True" Color="#FF424242"/>
+    <SolidColorBrush x:Key="MaterialDesignToolBarBackground" po:Freeze="True" Color="#FF212121"/>
+    <SolidColorBrush x:Key="MaterialDesignBody" po:Freeze="True" Color="#DDFFFFFF"/>
+    <SolidColorBrush x:Key="MaterialDesignBodyLight" po:Freeze="True" Color="#89FFFFFF"/>
+    <SolidColorBrush x:Key="MaterialDesignColumnHeader" po:Freeze="True" Color="#BCFFFFFF"/>
+    <SolidColorBrush x:Key="MaterialDesignCheckBoxOff" po:Freeze="True" Color="#89FFFFFF"/>
+    <SolidColorBrush x:Key="MaterialDesignCheckBoxDisabled" po:Freeze="True" Color="#FF647076"/>
+    <SolidColorBrush x:Key="MaterialDesignTextBoxBorder" po:Freeze="True" Color="#89FFFFFF"/>
+    <SolidColorBrush x:Key="MaterialDesignDivider" po:Freeze="True" Color="#1FFFFFFF"/>
+    <SolidColorBrush x:Key="MaterialDesignSelection" po:Freeze="True" Color="#757575"/>
+    <SolidColorBrush x:Key="MaterialDesignToolForeground" po:Freeze="true" Color="#616161"/>
+    <SolidColorBrush x:Key="MaterialDesignToolBackground" po:Freeze="true" Color="#e0e0e0"/>
+    <SolidColorBrush x:Key="MaterialDesignFlatButtonClick" po:Freeze="True" Color="#19757575"/>
+    <SolidColorBrush x:Key="MaterialDesignFlatButtonRipple" po:Freeze="True" Color="#FFB6B6B6"/>
+    <SolidColorBrush x:Key="MaterialDesignToolTipBackground" po:Freeze="True" Color="#eeeeee"/>
+    <SolidColorBrush x:Key="MaterialDesignChipBackground" po:Freeze="True" Color="#FF2E3C43"/>
+    <SolidColorBrush x:Key="MaterialDesignSnackbarBackground" po:Freeze="True" Color="#FFCDCDCD"/>
+    <SolidColorBrush x:Key="MaterialDesignSnackbarMouseOver" po:Freeze="True" Color="#FFB9B9BD"/>
+    <SolidColorBrush x:Key="MaterialDesignSnackbarRipple" po:Freeze="True" Color="#FF494949"/>
+    <SolidColorBrush x:Key="MaterialDesignTextFieldBoxBackground" po:Freeze="True" Color="#1AFFFFFF"/>
+    <SolidColorBrush x:Key="MaterialDesignTextFieldBoxHoverBackground" po:Freeze="True" Color="#1FFFFFFF"/>
+    <SolidColorBrush x:Key="MaterialDesignTextFieldBoxDisabledBackground" po:Freeze="True" Color="#0DFFFFFF"/>
+    <SolidColorBrush x:Key="MaterialDesignTextAreaBorder" po:Freeze="True" Color="#BCFFFFFF"/>
+    <SolidColorBrush x:Key="MaterialDesignTextAreaInactiveBorder" po:Freeze="True" Color="#1AFFFFFF"/>-->
+
+    <!--Backgroud thanh Tasbar!-->
+    <SolidColorBrush x:Key="Main" Color="#FF39454B"/>
+
+    <!--Foreground header!-->
+    <SolidColorBrush x:Key="header" Color="Orange"/>
+
+    <!--Foreground textbutton!-->
+    <SolidColorBrush x:Key="textbutton" Color="Teal"/>
+</ResourceDictionary>

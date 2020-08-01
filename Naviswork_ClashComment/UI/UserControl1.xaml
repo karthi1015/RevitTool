@@ -6,18 +6,15 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
     xmlns:local="clr-namespace:Naviswork_ClashComment"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-    Width="1850" Height="950"
-    MinWidth="300" MaxWidth="1920"
-    MinHeight="950" MaxHeight="1000"
+    MinWidth="300" MaxWidth="1820"
+    MinHeight="1000" MaxHeight="1000"
     Background="{DynamicResource MaterialDesignPaper}"
     TextElement.Foreground="{DynamicResource MaterialDesignBody}"
-    WindowStyle="None"
-    ResizeMode="CanResizeWithGrip" 
     WindowStartupLocation="CenterScreen"
     SizeToContent="WidthAndHeight"
-    AllowsTransparency="True"
-    BorderBrush="Aqua"
-    BorderThickness="1">
+    Title="Clash Detective"
+    Icon="\\192.168.1.250\data\DataBases\01 RevitDataBases\04 Add_in\01 Revit_API\Resources\Image\Logo\Logo_32x32.ico"
+>
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -62,54 +59,68 @@
     </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="50"/>
+            <ColumnDefinition Width="300"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
-        <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
-            <Grid>
-                <StackPanel>
-                    <Button
-                            Width="40" Height="40"
-                            Click="Update_Clash"
-                            Margin="0 15 0 10"
-                            ToolTip="Update Clash"
-                            Style="{StaticResource MaterialDesignIconButton}"
-                            Background="{DynamicResource MaterialDesignTextFieldBoxBackground}"
-                            materialDesign:ShadowAssist.ShadowDepth="Depth5"
-                            materialDesign:ShadowAssist.ShadowEdges="Bottom,Right">
-                        <materialDesign:PackIcon Kind="DatabaseSync" />
-                    </Button>
-                    <Button
-                            Width="40" Height="40"
-                            Click="Refresh_View"
-                            Margin="0 0 0 10"
-                            Style="{StaticResource MaterialDesignIconButton}"
-                            Background="{DynamicResource MaterialDesignTextFieldBoxBackground}"
-                            ToolTip="Refresh View"
-                            materialDesign:ShadowAssist.ShadowDepth="Depth5"
-                            materialDesign:ShadowAssist.ShadowEdges="Bottom,Right">
-                        <materialDesign:PackIcon Kind="Update" />
-                    </Button>
+        <Grid>
+            <StackPanel>
+                <StackPanel Orientation="Vertical"
+                        VerticalAlignment="Top"
+                        HorizontalAlignment="Stretch">
+                    <Label 
+                        Content="Controls :" 
+                        Foreground="{StaticResource header}"/>
+                    <StackPanel 
+                        Orientation="Horizontal"
+                        VerticalAlignment="Center"
+                        Margin="10">
+                        <Grid
+                            Width="50">
+                            <TextBlock
+                                Text="Update"
+                                VerticalAlignment="Bottom"
+                                HorizontalAlignment="Center"
+                                Foreground="{StaticResource PrimaryHueLightBrush}"/>
+                            <Button
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Height="50"
+                                materialDesign:ButtonAssist.CornerRadius="5"
+                                Click="Update_Clash">
+                                <materialDesign:PackIcon 
+                                    Kind="DatabaseSync" 
+                                    Width="30" Height="30"
+                                    Margin="-10 -20 -10 -10"/>
+                            </Button>
+                        </Grid>
+                        <Grid
+                            Width="50"
+                            Margin="20 0 0 0">
+                            <TextBlock
+                                Text="Refresh"
+                                VerticalAlignment="Bottom"
+                                HorizontalAlignment="Center"
+                                Foreground="{StaticResource PrimaryHueLightBrush}"/>
+                            <Button
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Height="50"
+                                materialDesign:ButtonAssist.CornerRadius="5"
+                                Click="Refresh_View">
+                                <materialDesign:PackIcon 
+                                    Kind="Update" 
+                                    Width="30" Height="30"
+                                    Margin="-10 -20 -10 -10"/>
+                            </Button>
+                        </Grid>
+                    </StackPanel>
                 </StackPanel>
-            </Grid>
-        </ScrollViewer>
-        <Grid Grid.Column="1">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="70"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
-            <Grid Background="Transparent" MouseDown="Drag">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="100"/>
-                </Grid.ColumnDefinitions>
-                <StackPanel 
-                    Grid.Column="0"
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Stretch">
+                <StackPanel Orientation="Vertical"
+                        VerticalAlignment="Top"
+                        HorizontalAlignment="Stretch">
+                    <Label 
+                        Content="Filter :"
+                        Foreground="{StaticResource header}"/>
                     <TextBox
-                        Margin="10"
+                        Margin="5"
                         x:Name="search_child"
                         Style="{StaticResource MaterialDesignFloatingHintTextBox}"
                         VerticalAlignment="Center"
@@ -118,48 +129,10 @@
                         materialDesign:HintAssist.Hint="Search By"
                         TextChanged="Search_Material_Project"/>
                 </StackPanel>
-                <StackPanel 
-                    Grid.Column="1"
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Stretch">
-                    <Button
-                        Click="Minimize"
-                        Height="30" Width="30"
-                        Style="{StaticResource MaterialDesignIconButton}"
-                        ToolTip="Minimize"
-                        materialDesign:ShadowAssist.ShadowDepth="Depth5">
-                        <materialDesign:PackIcon Kind="WindowMinimize" />
-                    </Button>
-                    <Button
-                        x:Name="max"
-                        Click="Maximize"
-                        Height="30" Width="30"
-                        Style="{StaticResource MaterialDesignIconButton}"
-                        ToolTip="Maximize"
-                        materialDesign:ShadowAssist.ShadowDepth="Depth5">
-                        <materialDesign:PackIcon Kind="WindowMaximize"/>
-                    </Button>
-                    <Button
-                        Click="Quit"
-                        Height="30" Width="30"
-                        Style="{StaticResource MaterialDesignIconButton}"
-                        ToolTip="Quit"
-                        materialDesign:ShadowAssist.ShadowDepth="Depth5">
-                        <materialDesign:PackIcon Kind="Power"/>
-                    </Button>
-                </StackPanel>
-            </Grid>
-
-            <Grid Grid.Row="1">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="300"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
                 <ListView 
                     Grid.Column="0"
                     Name="thong_tin_clash_parent"
-                    Margin="5"
+                    Margin="5 20 5 5"
                     SelectionMode="Single">
                     <ListView.View>
                         <GridView>
@@ -182,10 +155,10 @@
                                 <Setter.Value>
                                     <ControlTemplate TargetType="ListBoxItem">
                                         <Border x:Name="Border"
-                                                Background="{TemplateBinding Background}"
-                                                BorderBrush="{DynamicResource MaterialDesignDivider}"
-                                                BorderThickness="0,0,0,0"
-                                                SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}">
+                                            Background="{TemplateBinding Background}"
+                                            BorderBrush="{DynamicResource MaterialDesignDivider}"
+                                            BorderThickness="0,0,0,1"
+                                            SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}">
                                             <GridViewRowPresenter VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
                                         </Border>
                                     </ControlTemplate>
@@ -205,183 +178,185 @@
                         </Style>
                     </ListView.ItemContainerStyle>
                 </ListView>
-                <Grid Grid.Column="1"
-                      Visibility="{Binding ElementName=thong_tin_clash_parent, Path=SelectedItem, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource BooleanToVisibilityConverter}}"
-                      >
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="550"/>
-                    </Grid.ColumnDefinitions>
-                    <ListView 
-                            Name="thong_tin_clash_child"
-                            Margin="5 5 5 45"
-                            SelectionMode="Single">
-                                <ListView.View>
-                                    <GridView>
-                                        <GridViewColumn 
-                                        Width="100"
-                                        Header="Issuce" 
-                                        DisplayMemberBinding="{Binding clash_child}"/>
-                                        <GridViewColumn 
-                                        Header="Status">
-                                            <GridViewColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <ComboBox 
-                                                        MinWidth="100"
-                                                        Height="30"
-                                                        ItemsSource="{Binding status_child_list}"
-                                                        SelectedItem="{Binding status_child, Mode=TwoWay}" 
-                                                        DropDownClosed="Change_Status_Child"
-                                                        ItemTemplate ="{StaticResource combo}">
-                                                    </ComboBox>
-                                                </DataTemplate>
-                                            </GridViewColumn.CellTemplate>
-                                        </GridViewColumn>
-                                        <GridViewColumn 
-                                            Width="200"
-                                            Header="Location" 
-                                            DisplayMemberBinding="{Binding location_child}"/>
-                                        <GridViewColumn 
-                                            Width="150"
-                                            Header="Comments By" 
-                                            DisplayMemberBinding="{Binding approved_by_child}"/>
-                                        <GridViewColumn 
-                                        Header="Solution" 
-                                        Width="350" >
-                                            <GridViewColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <TextBox
-                                                BorderThickness="0"
-                                                    TextWrapping="Wrap"
-                                                    Text="{Binding solution_child}"
-                                                    Foreground="{Binding color, Mode=TwoWay}"
-                                                    Padding="0 0 0 0"/>
-                                                </DataTemplate>
-                                            </GridViewColumn.CellTemplate>
-                                        </GridViewColumn>
-                                    </GridView>
-                                </ListView.View>
-                                <ListView.ItemContainerStyle>
-                                    <Style TargetType="ListViewItem">
-                                        <EventSetter Event="MouseLeftButtonUp" Handler="Hight_Lights" />
-                                        <Setter Property="IsEnabled" Value="{Binding isEnable}"/>
-                                        <Setter Property="MinHeight" Value="35"/>
-                                        <Setter Property="Foreground" Value="{Binding color, Mode=TwoWay}"/>
-                                        <Setter Property="Template">
-                                            <Setter.Value>
-                                                <ControlTemplate TargetType="ListBoxItem">
-                                                    <Border x:Name="Border"
-                                                Background="{TemplateBinding Background}"
-                                                BorderBrush="{DynamicResource MaterialDesignDivider}"
-                                                BorderThickness="0,0,0,0"
-                                                SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}">
-                                                        <GridViewRowPresenter VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
-                                                    </Border>
-                                                </ControlTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                        <Style.Triggers>
-                                            <Trigger Property="IsSelected" Value="True">
-                                                <Setter Property="Background" Value="{DynamicResource MaterialDesignSelection}"/>
-                                            </Trigger>
-                                            <Trigger Property="IsMouseOver"  Value="True">
-                                                <Setter Property="Background" Value="{DynamicResource MaterialDesignDivider}"/>
-                                            </Trigger>
-                                            <!--<Trigger Property="IsKeyboardFocusWithin" Value="True">
+            </StackPanel>
+        </Grid>
+        <Grid 
+            Background="{StaticResource Tasbar}"
+            Grid.Column="1"
+            Visibility="{Binding ElementName=thong_tin_clash_parent, Path=SelectedItem, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="550"/>
+            </Grid.ColumnDefinitions>
+            <ListView 
+                Name="thong_tin_clash_child"
+                Margin="5 5 5 45"
+                SelectionMode="Single">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn 
+                            Width="100"
+                            Header="Issuce" 
+                            DisplayMemberBinding="{Binding clash_child}"/>
+                        <GridViewColumn 
+                            Header="Status">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <ComboBox 
+                                        MinWidth="100"
+                                        Height="30"
+                                        ItemsSource="{Binding status_child_list}"
+                                        SelectedItem="{Binding status_child, Mode=TwoWay}" 
+                                        DropDownClosed="Change_Status_Child"
+                                        ItemTemplate ="{StaticResource combo}">
+                                    </ComboBox>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn 
+                            Width="200"
+                            Header="Location" 
+                            DisplayMemberBinding="{Binding location_child}"/>
+                        <GridViewColumn 
+                            Width="150"
+                            Header="Comments By" 
+                            DisplayMemberBinding="{Binding approved_by_child}"/>
+                        <GridViewColumn 
+                            Header="Solution" 
+                            Width="350" >
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBox
+                                        BorderThickness="0"
+                                        TextWrapping="Wrap"
+                                        Text="{Binding solution_child}"
+                                        Foreground="{Binding color, Mode=TwoWay}"
+                                        Padding="0 0 0 0"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                    </GridView>
+                </ListView.View>
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <EventSetter Event="MouseLeftButtonUp" Handler="Hight_Lights" />
+                        <Setter Property="IsEnabled" Value="{Binding isEnable}"/>
+                        <Setter Property="MinHeight" Value="35"/>
+                        <Setter Property="Foreground" Value="{Binding color, Mode=TwoWay}"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListBoxItem">
+                                    <Border 
+                                        x:Name="Border"
+                                        Background="{TemplateBinding Background}"
+                                        BorderBrush="{DynamicResource MaterialDesignDivider}"
+                                        BorderThickness="0,0,0,1"
+                                        SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}">
+                                        <GridViewRowPresenter VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                        <Style.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource MaterialDesignSelection}"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver"  Value="True">
+                                <Setter Property="Background" Value="{DynamicResource MaterialDesignDivider}"/>
+                            </Trigger>
+                            <!--<Trigger Property="IsKeyboardFocusWithin" Value="True">
                                         <Setter Property="IsSelected" Value="True"/>
                                     </Trigger>-->
-                                        </Style.Triggers>
-                                    </Style>
-                                </ListView.ItemContainerStyle>
-                            </ListView>
-                    <StackPanel Margin="5" VerticalAlignment="Bottom">
-                        <StatusBar 
-                            Height="35"
-                            Background="Transparent">
-                            <StatusBar.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="1" />
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="1" />
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="1" />
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="1" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                    </Grid>
-                                </ItemsPanelTemplate>
-                            </StatusBar.ItemsPanel>
-                            <StatusBarItem>
-                                <TextBlock
-                                    FontSize="16"
-                                    Name="Comments" 
-                                    Text="Comments" 
-                                    TextAlignment="Center"/>
-                            </StatusBarItem>
-                            <Separator Grid.Column="1" />
-                            <StatusBarItem Grid.Column="2">
-                                <TextBlock 
-                                    FontSize="16"
-                                    Name="Resolved"  
-                                    Text="Resolved" 
-                                    TextAlignment="Center"/>
-                            </StatusBarItem>
-                            <Separator Grid.Column="3" />
-                            <StatusBarItem Grid.Column="4">
-                                <TextBlock 
-                                    FontSize="16"
-                                    Name="Approved"  
-                                    Text="Approved" 
-                                    TextAlignment="Center"/>
-                            </StatusBarItem>
-                            <Separator Grid.Column="5" />
-                            <StatusBarItem Grid.Column="6">
-                                <TextBlock 
-                                    FontSize="16"
-                                    Name="Ignore"  
-                                    Text="Ignore"
-                                    TextAlignment="Center"/>
-                            </StatusBarItem>
-                            <Separator Grid.Column="7" />
-                            <StatusBarItem Grid.Column="8">
-                                <TextBlock 
-                                    FontSize="16"
-                                    Name="New"  
-                                    Text="New" 
-                                    TextAlignment="Center"/>
-                            </StatusBarItem>
-                        </StatusBar>
-                    </StackPanel>
-                    <StackPanel
-                        Grid.Column="1"
-                        HorizontalAlignment="Center">
-                        <ListView 
-                            Name="hinh_anh_minh_hoa"
-                            Margin="5">
-                            <ListView.View>
-                                <GridView>
-                                    <GridViewColumn 
-                                        Header="Image" 
-                                        Width="500" >
-                                        <GridViewColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <Image 
-                                                    Source="{Binding bitmap}"
-                                                    Width="auto"
-                                                    Height="auto"/>
-                                            </DataTemplate>
-                                        </GridViewColumn.CellTemplate>
-                                    </GridViewColumn>
-                                </GridView>
-                            </ListView.View>
-                        </ListView >
-                    </StackPanel>
-                </Grid>
-            </Grid>
+                        </Style.Triggers>
+                    </Style>
+                </ListView.ItemContainerStyle>
+            </ListView>
+            <StackPanel Margin="5" VerticalAlignment="Bottom">
+                <StatusBar 
+                    Height="35"
+                    Background="Transparent">
+                    <StatusBar.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="1" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="1" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="1" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="1" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                            </Grid>
+                        </ItemsPanelTemplate>
+                    </StatusBar.ItemsPanel>
+                    <StatusBarItem>
+                        <TextBlock
+                            FontSize="16"
+                            Name="Comments" 
+                            Text="Comments" 
+                            TextAlignment="Center"/>
+                    </StatusBarItem>
+                    <Separator Grid.Column="1" />
+                    <StatusBarItem Grid.Column="2">
+                        <TextBlock 
+                            FontSize="16"
+                            Name="Resolved"  
+                            Text="Resolved" 
+                            TextAlignment="Center"/>
+                    </StatusBarItem>
+                    <Separator Grid.Column="3" />
+                    <StatusBarItem Grid.Column="4">
+                        <TextBlock 
+                            FontSize="16"
+                            Name="Approved"  
+                            Text="Approved" 
+                            TextAlignment="Center"/>
+                    </StatusBarItem>
+                    <Separator Grid.Column="5" />
+                    <StatusBarItem Grid.Column="6">
+                        <TextBlock 
+                            FontSize="16"
+                            Name="Ignore"  
+                            Text="Ignore"
+                            TextAlignment="Center"/>
+                    </StatusBarItem>
+                    <Separator Grid.Column="7" />
+                    <StatusBarItem Grid.Column="8">
+                        <TextBlock 
+                            FontSize="16"
+                            Name="New"  
+                            Text="New" 
+                            TextAlignment="Center"/>
+                    </StatusBarItem>
+                </StatusBar>
+            </StackPanel>
+            <StackPanel
+                Grid.Column="1"
+                HorizontalAlignment="Center">
+                <ListView 
+                    Name="hinh_anh_minh_hoa"
+                    Margin="5">
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn
+                                Header="Image"
+                                Width="500">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Image 
+                                            Source="{Binding bitmap}"
+                                            Width="auto"
+                                            Height="auto"/>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                        </GridView>
+                    </ListView.View>
+                </ListView >
+            </StackPanel>
         </Grid>
     </Grid>
 </Window>

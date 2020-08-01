@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 using System.Windows.Media;
 using Color = Autodesk.Revit.DB.Color;
 
-namespace WEB_SaveAs
+namespace ARC_Quatity.Data.Binding
 {
-    public class Quatity
+    class data_quantity
     {
         public string block { get; set; }
         public string level { get; set; }
@@ -25,29 +25,15 @@ namespace WEB_SaveAs
         public string color_sort { get; set; }
 
         public Element cau_kien { get; set; }
-        public Material_Paint_Or_NoPaint vat_lieu { get; set; }
+        public data_paint vat_lieu { get; set; }
 
         public double elevation { get; set; }
         public string link_file_name { get; set; }
     }
 
-    public class Material_Paint_Or_NoPaint
+    class data_paint
     {
         public Material vat_lieu { get; set; }
-        public bool paint_or_nopaint { get; set; }
-    }
-
-    public class Link_File
-    {
-        public string ten_file { get; set; }
-        public bool chon_file_link { get; set; }
-        public double elevation { get; set; }
-        public RevitLinkType link_file { get; set; }
-    }
-
-    public class Element_Link
-    {
-        public Element cau_kien { get; set; }
-        public Document doc { get; set; }
+        public bool is_paint { get; set; }
     }
 }

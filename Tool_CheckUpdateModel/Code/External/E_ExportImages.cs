@@ -94,7 +94,7 @@ namespace Tool_CheckUpdateModel.Function
             {
                 BoundingBoxXYZ boundingBoxXYZ = new BoundingBoxXYZ();
                 ResetView(uiapp, doc);
-                double a = 5;
+                double a = 2;
                 if (item.element != null && item.element_link != null)
                 {
                     BoundingBoxXYZ boundingbox_1 = item.element.get_BoundingBox(null);

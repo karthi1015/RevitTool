@@ -14,44 +14,29 @@ using System.Windows;
 using MessageBox = System.Windows.MessageBox;
 using System.Collections.ObjectModel;
 using System.Linq;
+using ARC_Quatity.Data.Binding;
 #endregion
 
-namespace WEB_SaveAs
+namespace ARC_Quatity
 {
-    //ExternalEventClass myExampleDraw;
-    //ExternalEvent Draw;
-
-    //myExampleDraw = new ExternalEventClass();
-    //Draw = ExternalEvent.Create(myExampleDraw);
-
-    //Draw.Raise();
-    public class ExternalEventClass : IExternalEventHandler
+    public class E_VisibleLink : IExternalEventHandler
     {
-        public string command { get; set; }
 
-        public CheckBox bao_gom_link { get; set; }
+        //public CheckBox bao_gom_link { get; set; }
 
-        public ObservableCollection<Link_File> myLink_File { get; set; }
-
-        ListSource mySource;
-        FunctionSupoort myFunctionSupport;
+        //public ObservableCollection<data_file_link> my_file_link { get; set; }
 
         public void Execute(UIApplication uiapp)
         {
             UIDocument uidoc = uiapp.ActiveUIDocument;
             Document doc = uidoc.Document;
-            mySource = new ListSource();
-            myFunctionSupport = new FunctionSupoort();
 
             try
             {
                 Transaction transaction = new Transaction(doc);
                 transaction.Start("Parameters");
 
-                if (command == "Visible Link File")
-                {
-                    Visible_Link_File(uiapp, doc);
-                }
+                Visible_Link_File(uiapp, doc);
 
                 transaction.Commit();
             }
@@ -91,36 +76,5 @@ namespace WEB_SaveAs
             }
             return result;
         }
-
-        //----------------------------------------------------------
-        public string Them_Hoac_Xoa_Information_Trong_Project(UIApplication uiapp,Document doc)
-        {
-            string result = "F";
-            try
-            {
-                
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-            return result;
-        }
-
-        //----------------------------------------------------------
-        public string Xoa_Type_Project(UIApplication uiapp, Document doc)
-        {
-            string result = "F";
-            try
-            {
-                
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-            return result;
-        }
-
     }
 }
