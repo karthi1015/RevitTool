@@ -24,23 +24,24 @@ namespace ARC_Quatity.Code.Function
     class F_Upload
     {
         //----------------------------------------------------------
-        public static string Upload(Document doc, List<List<List<string>>> values, List<string> material_id, string id_file)
+        public static string Upload(Autodesk.Revit.DB.Document doc, List<List<List<string>>> values, List<string> material_id, string id_file)
         {
             string result = "F";
             try
             {
+                int column_material = 10;
+                int column_element = 11;
                 List<List<string>> value_material = new List<List<string>>();
 
                 DataTable dt = new DataTable();
-                for (int i = 0; i < values[0][0].Count(); i++)
+                for (int i = 0; i < column_material; i++)
                 {
                     dt.Columns.Add(new DataColumn(i.ToString(), typeof(string)));
-
                 }
                 foreach (string key in material_id)
                 {
                     List<string> support = new List<string>();
-                    for (int i = 0; i < values[0][0].Count(); i++)
+                    for (int i = 0; i < column_material; i++)
                     {
                         if (i == 0) support.Add(id_file);
                         else if (i == 4) support.Add(key);
@@ -54,7 +55,7 @@ namespace ARC_Quatity.Code.Function
                 }
 
                 DataTable dt1 = new DataTable();
-                for (int i = 0; i < values[0][0].Count(); i++)
+                for (int i = 0; i < column_material; i++)
                 {
                     dt1.Columns.Add(new DataColumn(i.ToString(), typeof(string)));
                 }
@@ -64,7 +65,7 @@ namespace ARC_Quatity.Code.Function
                 }
 
                 DataTable dt2 = new DataTable();
-                for (int i = 0; i < values[1][0].Count(); i++)
+                for (int i = 0; i < column_element; i++)
                 {
                     dt2.Columns.Add(new DataColumn(i.ToString(), typeof(string)));
                 }
@@ -73,8 +74,8 @@ namespace ARC_Quatity.Code.Function
                     dt2.Rows.Add(dt2.NewRow().ItemArray = value.ToArray());
                 }
 
-                List<string> Para1 = new List<string>() { "@DBProjectNumber", "@DBTable_All", "@DBTable_Upload", "@DBTable_Upload_1" };
-                List<object> Para1_Values = new List<object>() { doc.ProjectInformation.Number, dt, dt1, dt2 };
+                List<string> Para1 = new List<string>() { "@DBProjectNumber", "@DBIdFile", "@DBTable_All", "@DBTable_Upload", "@DBTable_Upload_1" };
+                List<object> Para1_Values = new List<object>() { doc.ProjectInformation.Number, id_file, dt, dt1, dt2 };
                 var result_sql_delete = SQL.SQLDelete(Source.path_revit, "dbo.sp_delete_quantity_support", Source.type_Procedure, Para1, Para1_Values);
 
                 List<string> Para2 = new List<string>() { "@DBProjectNumber", "@DBTable_Upload", "@DBTable_Upload_1" };

@@ -4,11 +4,11 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-    xmlns:local="clr-namespace:ARC_Quatity"
+    xmlns:local="clr-namespace:ARC_Quatity.Code"
     xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     MinHeight="1000"
-    MinWidth="300"
+    MinWidth="1400"
     MaxHeight="1000"
     MaxWidth="1920"
     Background="{DynamicResource MaterialDesignPaper}"
@@ -47,7 +47,7 @@
             <convert:StringToVisibleConverter x:Key="StringToVisibleConverter"/>
             <convert:StringToNotVisibleConverter x:Key="StringToNotVisibleConverter"/>-->
 
-            <!--<local:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />-->
+            <local:BooleanToTransformConverter x:Key="BooleanToTransformConverter" />
 
         </ResourceDictionary>
     </Window.Resources>
@@ -75,7 +75,7 @@
                             VerticalContentAlignment="Center" 
                             Click="Bao_Gom_Ca_Link_File"/>
                     </StackPanel>
-                    
+
                     <StackPanel 
                         Orientation="Horizontal"
                         VerticalAlignment="Center"
@@ -98,11 +98,12 @@
                                     Margin="-10 -20 -10 -10"/>
                             </Button>
                         </Grid>
+
                         <Grid
                             Width="50"
                             Margin="20 0 0 0">
                             <TextBlock
-                                Text="Select"
+                                Text="Input"
                                 VerticalAlignment="Bottom"
                                 HorizontalAlignment="Center"
                                 Foreground="{StaticResource PrimaryHueMidBrush}"/>
@@ -110,9 +111,10 @@
                                 Style="{StaticResource MaterialDesignOutlinedButton}"
                                 Height="50"
                                 materialDesign:ButtonAssist.CornerRadius="5"
-                                Click="Element_Select">
+                                IsEnabled="{Binding ElementName=new_quantity, Path=IsChecked}"
+                                Click="input_quantity_data_Click">
                                 <materialDesign:PackIcon 
-                                    Kind="SelectionMultiple" 
+                                    Kind="DatabasePlus" 
                                     Width="30" Height="30"
                                     Margin="-10 -20 -10 -10"/>
                             </Button>
@@ -161,7 +163,7 @@
                         </Grid>
                     </StackPanel>
                 </StackPanel>
-                
+
                 <StackPanel>
                     <Label 
                         Content="Visible :" 
@@ -169,29 +171,34 @@
                     <StackPanel
                         Orientation="Horizontal">
                         <RadioButton
+                            Name="new_quantity"
+                            Content="Input"
+                            Height="35"
+                            VerticalContentAlignment="Center"
+                            Click="Xem_Du_Lieu_Quantity_input"/>
+                        <RadioButton
                             IsChecked="True"
                             Name="total"
                             Content="Material"
+                            Margin="20 0 0 0"
                             Height="35"
-                            VerticalAlignment="Top"
                             VerticalContentAlignment="Center"
                             Click="Xem_Du_Lieu_Quantity_total"/>
                         <RadioButton
                             Name="any"
                             Content="Element"
-                            Margin="60 0 0 0"
+                            Margin="20 0 0 0"
                             Height="35"
-                            VerticalAlignment="Top"
                             VerticalContentAlignment="Center" 
                             Click="Xem_Du_Lieu_Quantity_element"/>
                         <RadioButton
+                            IsChecked="True"
                             Name="web"
                             Content="Web"
-                            Margin="50 0 0 0"
+                            Margin="20 0 0 0"
                             Height="35"
-                            VerticalAlignment="Top"
                             VerticalContentAlignment="Center" />
-                        
+
                     </StackPanel>
                 </StackPanel>
                 <StackPanel Orientation="Vertical"
@@ -301,6 +308,7 @@
                 <ColumnDefinition Width="auto"/>
             </Grid.ColumnDefinitions>
             <ListView 
+                VerticalAlignment="Top"
                 Grid.Column="0"
                 Name="thong_tin_quantity_total_project"
                 Margin="5 10 5 5"
@@ -351,6 +359,7 @@
             </ListView>
             <!--bảng dữ liệu vật liệu trong project-->
             <ListView 
+                VerticalAlignment="Top"
                 Name="thong_tin_quantity_project"
                 Margin="5 10 5 5"
                 MouseLeftButtonUp="Chon_Cau_Kien_element"
@@ -426,6 +435,7 @@
                 </ListView.View>
             </ListView>
             <ListView 
+                VerticalAlignment="Top"
                 Grid.Column="0"
                 Name="thong_tin_quantity_total_web"
                 Margin="5 10 5 5"
@@ -444,6 +454,171 @@
                     <Style TargetType="ListViewItem">
                         <Setter Property="Margin" Value="8 0 0 0"/>
                         <Setter Property="MinHeight" Value="35"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListBoxItem">
+                                    <Border x:Name="Border"
+                                            Background="{TemplateBinding Background}"
+                                            BorderBrush="{DynamicResource MaterialDesignDivider}"
+                                            BorderThickness="0,0,0,1"
+                                            SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}">
+                                        <GridViewRowPresenter VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                        <Style.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource MaterialDesignSelection}"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver"  Value="True">
+                                <Setter Property="Background" Value="{DynamicResource MaterialDesignDivider}"/>
+                            </Trigger>
+                            <!--<Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                    <Setter Property="IsSelected" Value="True"/>
+                                </Trigger>-->
+                        </Style.Triggers>
+                    </Style>
+                </ListView.ItemContainerStyle>
+            </ListView>
+            <StackPanel
+                Orientation="Horizontal"
+                VerticalAlignment="Top"
+                Margin="5"
+                Background="{StaticResource MaterialDesignPaper}">
+                <StackPanel.Resources>
+                    <Storyboard x:Key="SlideTop">
+                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
+                             From="-80" To="0"
+                             Duration="0:0:0.3" />
+                    </Storyboard>
+                    <Storyboard x:Key="SlideBottom">
+                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
+                              From="0" To="-80" 
+                              Duration="0:0:0.3" />
+                    </Storyboard>
+                </StackPanel.Resources>
+                
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsChecked, ElementName=new_quantity}" Value="True">
+                                <DataTrigger.EnterActions>
+                                    <BeginStoryboard Storyboard="{StaticResource SlideTop}" />
+                                </DataTrigger.EnterActions>
+                                <DataTrigger.ExitActions>
+                                    <BeginStoryboard Storyboard="{StaticResource SlideBottom}" />
+                                </DataTrigger.ExitActions>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <StackPanel.RenderTransform>
+                    <TranslateTransform Y="-80"/>
+                </StackPanel.RenderTransform>
+                <TextBox
+                    IsEnabled="False"
+                    x:Name="input_block"
+                    Height="40" Width="100"
+                    Margin="5"
+                    Padding="2 -2 0 0"
+                    Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                    materialDesign:HintAssist.Hint="Block"
+                    HorizontalContentAlignment="Stretch"
+                    TextAlignment="Center"/>
+                <TextBox
+                    x:Name="input_level"
+                    Height="40" MinWidth="150" MaxWidth="250"
+                    Margin="5"
+                    Padding="2 -2 0 0"
+                    Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                    materialDesign:HintAssist.Hint="Level"
+                    HorizontalContentAlignment="Stretch"
+                    TextAlignment="Center"/>
+                <ComboBox
+                    Height="40" MinWidth="450" MaxWidth="900"
+                    Name="input_material"
+                    materialDesign:HintAssist.Hint="Material"
+                    Style="{StaticResource MaterialDesignFloatingHintComboBox}" 
+                    VerticalContentAlignment="Stretch"
+                    HorizontalContentAlignment="Left"
+                    Padding="6" DropDownClosed="select_material_quantity_Click">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding name}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <TextBox
+                    IsEnabled="False"
+                    x:Name="input_id"
+                    Height="40" Width="100"
+                    Margin="5"
+                    Padding="2 -2 0 0"
+                    Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                    materialDesign:HintAssist.Hint="ID"
+                    HorizontalContentAlignment="Stretch"
+                    TextAlignment="Center"/>
+                <TextBox
+                    x:Name="input_quantity"
+                    Height="40" Width="100"
+                    Margin="5"
+                    Padding="2 -2 0 0"
+                    Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                    materialDesign:HintAssist.Hint="Quantity"
+                    HorizontalContentAlignment="Stretch"
+                    TextAlignment="Center"/>
+                <TextBox
+                    IsEnabled="False"
+                    x:Name="input_unit"
+                    Height="40" Width="100"
+                    Margin="5"
+                    Padding="2 -2 0 0"
+                    Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                    materialDesign:HintAssist.Hint="Unit"
+                    HorizontalContentAlignment="Stretch"
+                    TextAlignment="Center"/>
+            </StackPanel>
+            <ListView 
+                VerticalAlignment="Top"
+                Grid.Column="0"
+                Name="thong_tin_quantity_input"
+                Margin="5 80 5 5"
+                SelectionMode="Single"
+                MouseLeftButtonUp="Chon_Vat_Lieu_input"
+                Visibility="{Binding ElementName=new_quantity, Path=IsChecked, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <ListView.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem 
+                                Header="Update" 
+                                Click="update_data_input_Click">
+                            <MenuItem.Icon>
+                                <materialDesign:PackIcon Kind="Update" Foreground="{StaticResource PrimaryHueLightBrush}"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem 
+                                Header="Delete" 
+                                Click="delete_data_input_Click">
+                            <MenuItem.Icon>
+                                <materialDesign:PackIcon Kind="DeleteOutline" Foreground="{StaticResource PrimaryHueLightBrush}"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                    </ContextMenu>
+                </ListView.ContextMenu>
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="Block" Width="100" DisplayMemberBinding="{Binding block}"/>
+                        <GridViewColumn Header="Level" Width="150" DisplayMemberBinding="{Binding level}"/>
+                        <GridViewColumn Header="Material Name" Width="450" DisplayMemberBinding="{Binding ten_vat_lieu}"/>
+                        <GridViewColumn Header="ID" Width="100" DisplayMemberBinding="{Binding ma_cong_tac}"/>
+                        <GridViewColumn Header="Quatity" Width="150" DisplayMemberBinding="{Binding quantity}"/>
+                        <GridViewColumn Header="Unit" Width="100" DisplayMemberBinding="{Binding don_vi}"/>
+                    </GridView>
+                </ListView.View>
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="Margin" Value="8 0 0 0"/>
+                        <Setter Property="Height" Value="35"/>
                         <Setter Property="Template">
                             <Setter.Value>
                                 <ControlTemplate TargetType="ListBoxItem">

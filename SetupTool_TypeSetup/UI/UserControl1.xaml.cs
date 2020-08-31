@@ -1,23 +1,18 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using Autodesk.Revit.UI.Selection;
+using SetupTool_TypeSetup.Code.External;
+using SetupTool_TypeSetup.Code.Function;
+using SetupTool_TypeSetup.Data.Binding;
+using SetupTool_TypeSetup.Data.BindingCompany;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using ComboBox = System.Windows.Controls.ComboBox;
 
 namespace SetupTool_TypeSetup
 {
@@ -26,41 +21,28 @@ namespace SetupTool_TypeSetup
     /// </summary>
     public partial class UserControl1 : Window
     {
-        FunctionSQL mySQL;
-        FunctionSupoort myFunctionSupport;
-        ListSource mySource;
-
         UIApplication uiapp;
         UIDocument uidoc;
         Document doc;
+        string project_number;
+        string block;
+        string Class;
+        string unit_length;
 
-        ExternalEventClass myExampleDraw;
-        ExternalEvent Draw;
-
-        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
-        private void Window_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            if (e.LeftButton == MouseButtonState.Pressed)
-            {
-                DragMove();
-            }
-        }
-
-        private void closeWindow(object sender, RoutedEventArgs e)
-        {
-            Close();
-        }
+        E_Create my_create;
+        ExternalEvent e_create;
+        E_Delete my_delete;
+        ExternalEvent e_delete;
+        E_Update my_update;
+        ExternalEvent e_update;
 
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------
-        public ObservableCollection<Data> list_descipline_name { get; set; }
-        public ObservableCollection<Data> list_category_name { get; set; }                                              // Lay_Du_Lieu_Category
-        public ObservableCollection<Family_Type> myFamily_Type { get; set; }                                            // Show_Tat_Ca_Family_Type
-        public ObservableCollection<Parameters_Family> myParameters_Family { get; set; }                                // Xem_Thong_Tin
-        public ObservableCollection<Material_Family> myMaterial_Family { get; set; }                                    // Xem_Thong_Tin
-        public ObservableCollection<Data> materials { get; set; }                                                       // Xem_Thong_Tin
+        ObservableCollection<data_family> my_family { get; set; }
+        ObservableCollection<data_parameters> my_parameters { get; set; }
+        ObservableCollection<data_materials> my_materials { get; set; }
+        ObservableCollection<data_material> my_material { get; set; }
 
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------
-        public string path = "";
         public UserControl1(UIApplication _uiapp)
         {
             InitializeComponent();
@@ -68,118 +50,103 @@ namespace SetupTool_TypeSetup
             uidoc = uiapp.ActiveUIDocument;
             doc = uidoc.Document;
 
-            myExampleDraw = new ExternalEventClass();
-            Draw = ExternalEvent.Create(myExampleDraw);
-
-            mySQL = new FunctionSQL();
-            myFunctionSupport = new FunctionSupoort();
-            mySource = new ListSource();
-
-            
-            var listtotal = mySQL.SQLRead(@"Server=18.141.116.111,1433\SQLEXPRESS;Database=ManageDataBase;User Id=ManageUser; Password = manage@connect789", "Select * from dbo.PathSource", "Query", new List<string>(), new List<string>());
-            path = listtotal.Rows[0][1].ToString();
-            Function_TXT();
+            register_external();
 
             Function_Dau_Vao();
         }
+
+        //----------------------------------------------------------
+        void register_external()
+        {
+            my_create = new E_Create();
+            e_create = ExternalEvent.Create(my_create);
+
+            my_delete = new E_Delete();
+            e_delete = ExternalEvent.Create(my_delete);
+
+            my_update = new E_Update();
+            e_update = ExternalEvent.Create(my_update);
+        }
+
         //----------------------------------------------------------
         public void Function_Dau_Vao()
         {
-            myFunctionSupport.Default_Image(myAll_Data, new List<Image>() { logo_image, duplicate_image, modify_image, refresh_image });
+            List<string> file_name = doc.Title.Split('_').ToList();
+            project_number = doc.ProjectInformation.Number;
+            block = doc.ProjectInformation.BuildingName;
+            Class = doc.ProjectInformation.LookupParameter("Class") == null ? "" : doc.ProjectInformation.LookupParameter("Class").AsString();
+            if (string.IsNullOrEmpty(Class)) MessageBox.Show("Share Parameter Class not found", "ERROR", MessageBoxButton.OK, MessageBoxImage.Error);
 
-            Lay_Du_Lieu_Category();
-            myParameters_Family = new ObservableCollection<Parameters_Family>();
-            Lay_Type_Duoc_Chon();
-        }
-
-        //----------------------------------------------------------
-        public All_Data myAll_Data { get; set; }
-        public void Function_TXT()
-        {
-            try
+            if (file_name.Count() > 3)
             {
-                myAll_Data = myFunctionSupport.Get_Data_All(path);
-            }
-            catch (Exception)
-            {
+                unit_length = F_GetUnits.get_unit_length_type(doc);
+                List<string> format = new List<string>();
+                if (project_number != file_name[0]) format.Add("Project Number");
 
-            }
-        }
+                if (block != file_name[1]) format.Add("Block");
 
-        //----------------------------------------------------------
-        public void Lay_Type_Duoc_Chon()
-        {
-            try
-            {
-                Selection selection = uidoc.Selection;
-                var element_selects = selection.GetElementIds().ToList();
-                if (element_selects.Count() == 1)
+                if (Class != file_name[3]) format.Add("Class");
+
+                if (format.Count() == 0)
                 {
-                    Element element_select = doc.GetElement(element_selects[0]);
-                    ElementType type = doc.GetElement(element_select.get_Parameter(BuiltInParameter.ELEM_TYPE_PARAM).AsElementId()) as ElementType;
+                    F_GetDesciplineAndCategory.get_descipline_and_category(descipline, category);
+                    CollectionView view_category = (CollectionView)CollectionViewSource.GetDefaultView(category.ItemsSource);
+                    view_category.Filter = Filter_category;
 
-                    string descipline_name = type.Name.Split('_')[0];
-
-                    string position = type.Name.Split('_')[1];
-
-                    string category_name = type.Name.Split('_')[2];
-
-                    descipline.SelectedItem = list_descipline_name.First(x => x.ten_type == descipline_name);
-
-                    if (position == myAll_Data.list_position_data[0].position_key) outhome.IsChecked = true;
-                    else if (position == myAll_Data.list_position_data[1].position_key) inhome.IsChecked = true;
-                    else kc.IsChecked = true;
-
-                    category.SelectedItem = list_category_name.First(x => x.ten_type == category_name);
-
+                    my_family = new ObservableCollection<data_family>();
+                    my_parameters = new ObservableCollection<data_parameters>();
+                    my_materials = new ObservableCollection<data_materials>();
+                    my_material = new ObservableCollection<data_material>();
+                    ElementType type = F_TypeDefault.get_type_select(uidoc, doc, descipline, category, outhome, inhome, kc);
                     Show_Tat_Ca_Family_Type();
-                    foreach(Family_Type family in myFamily_Type)
+                    if (type != null)
                     {
-                        if (family.ten_family_type == type.FamilyName)
+                        foreach (data_family family in my_family)
                         {
-                            family.ValueExpanded = true;
-                            foreach (Element_Type element_Type in family.Children)
+                            if (family.ten_family_type == type.FamilyName)
                             {
-                                if (element_Type.ten_element_type == type.Name)
+                                family.ValueExpanded = true;
+                                foreach (data_type element_Type in family.Children)
                                 {
-                                    element_Type.ValueIsSelect = true;
-                                    Xem_Thong_Tin(element_Type);
+                                    if (element_Type.ten_element_type == type.Name)
+                                    {
+                                        element_Type.ValueIsSelect = true;
+                                        F_ViewDetail.view_detail(doc, element_Type, my_parameters, my_materials, my_material, thong_tin_kich_thuoc, thong_tin_cong_tac_vat_lieu, unit_length);
+                                    }
                                 }
                             }
                         }
                     }
-                    thong_tin_family_type.Items.Refresh();
                 }
-                //else
-                //{
-                //    category.SelectedItem = list_category_name.First(x => x.single_value == myAll_Data.list_category_data[0].single_value);
-                //    Show_Tat_Ca_Family_Type();
-                //}
-                Change();
+                else
+                {
+                    MessageBox.Show(string.Format("Data is incorrect.\nPlease check {0} and try again!", string.Join(",", format)), "ERROR", MessageBoxButton.OK, MessageBoxImage.Error);
+                    this.Close();
+                }
             }
-            catch (Exception ex)
+            else
             {
-                MessageBox.Show(ex.Message);
+                MessageBox.Show("File name is incorrect. Please check and try again!", "ERROR", MessageBoxButton.OK, MessageBoxImage.Error);
+                this.Close();
             }
         }
 
         //----------------------------------------------------------
-        public void Lay_Du_Lieu_Category()
+        private bool Filter_category(object item)
         {
-            list_descipline_name = myAll_Data.list_descipline_data;
-            descipline.ItemsSource = list_descipline_name;
-            descipline.SelectedIndex = 0;
-
-            list_category_name = myAll_Data.list_category_data;
-            category.ItemsSource = list_category_name;
-            category.SelectedIndex = 0;
+            if (descipline.SelectedItem == null)
+                return true;
+            else
+            {
+                data_name_key data = (data_name_key)descipline.SelectedItem;
+                return (item as data_name_key).descipline_key == data.key;
+            }
         }
 
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------
         private void Xem_Thong_Tin_Element_Type_By_Category(object sender, EventArgs e)
         {
             Show_Tat_Ca_Family_Type();
-            Change();
         }
 
         //-----------------------------------------------------------
@@ -187,70 +154,17 @@ namespace SetupTool_TypeSetup
         {
             try
             {
-                myFamily_Type = new ObservableCollection<Family_Type>();
-                myParameters_Family = new ObservableCollection<Parameters_Family>();
-                myMaterial_Family = new ObservableCollection<Material_Family>();
-                thong_tin_kich_thuoc.ItemsSource = new ObservableCollection<Parameters_Family>();
-                thong_tin_cong_tac_vat_lieu.ItemsSource = new ObservableCollection<Material_Family>();
+                my_family = new ObservableCollection<data_family>();
+                my_parameters = new ObservableCollection<data_parameters>();
+                my_materials = new ObservableCollection<data_materials>();
+                thong_tin_kich_thuoc.ItemsSource = new ObservableCollection<data_parameters>();
+                thong_tin_cong_tac_vat_lieu.ItemsSource = new ObservableCollection<data_materials>();
 
-                Data descipline_data = (Data)descipline.SelectedItem;
-                string position = "";
-                if (outhome.IsChecked == true) position = myAll_Data.list_position_data[0].position_key;
-                else if (inhome.IsChecked == true) position = myAll_Data.list_position_data[1].position_key;
-                else position = myAll_Data.list_position_data[2].position_key;
-                Data category_data = (Data)category.SelectedItem;
-                
-                var elements = new FilteredElementCollector(uidoc.Document).OfClass(typeof(ElementType)).ToElements();
-                var familys = new FilteredElementCollector(uidoc.Document).OfClass(typeof(FamilySymbol)).ToElements();
-                List<string> family_check = new List<string>();
-                foreach (ElementType ele_family in elements)
-                {
-                    if (ele_family.Name.Split('_')[0] == descipline_data.ten_type && ele_family.Name.Split('_')[1] == position && ele_family.Name.Split('_')[2] == category_data.ten_type)
-                    {
-                        if (family_check.Contains(ele_family.FamilyName) == false)
-                        {
-                            ObservableCollection<Element_Type> myElement_Type = new ObservableCollection<Element_Type>();
-                            foreach (ElementType ele_type in elements)
-                            {
-                                if (ele_family.FamilyName == ele_type.FamilyName && ele_type.Name.Split('_')[0] == descipline_data.ten_type && ele_type.Name.Split('_')[1] == position && ele_type.Name.Split('_')[2] == category_data.ten_type)
-                                {
-                                    string type_type = mySource.type_element;
-                                    if (familys.Any(x => x.Id.IntegerValue == ele_type.Id.IntegerValue))
-                                    {
-                                        type_type = mySource.type_symbol;
-                                    }
-                                    myElement_Type.Add(new Element_Type()
-                                    {
-                                        ten_element_type = ele_type.Name,
-                                        element_type = ele_type,
-                                        type_type = type_type,
-                                        delete_type = false,
-                                        ValueIsSelect = false,
-                                    });
-                                }
-                            }
-                            ObservableCollection<Element_Type> myElement_Type_sort = new ObservableCollection<Element_Type>(myElement_Type.OrderBy(x => x.ten_element_type).ToList());
-
-                            myFamily_Type.Add(new Family_Type()
-                            {
-                                ten_family_type = ele_family.FamilyName,
-                                path = myFunctionSupport.Create_Preview(ele_family, myAll_Data),
-                                ValueExpanded = false,
-                                Children = myElement_Type_sort
-                            });
-                        }
-                        family_check.Add(ele_family.FamilyName);
-                    }
-                }
-
-                thong_tin_family_type.ItemsSource = myFamily_Type;
-
-                CollectionView view = (CollectionView)CollectionViewSource.GetDefaultView(thong_tin_family_type.ItemsSource);
-                // sort list view
-                view.SortDescriptions.Add(new SortDescription("ten_family_type", ListSortDirection.Ascending));
-
-                // filter list view theo tên vật liệu
-                try { view.Filter = Filter_ten_vat_lieu; } catch (Exception){}
+                F_ShowTreeView.show_data(doc, descipline, category, outhome, inhome, kc, my_family);
+                thong_tin_family_type.ItemsSource = my_family;
+                ListCollectionView view = CollectionViewSource.GetDefaultView(thong_tin_family_type.ItemsSource) as ListCollectionView;
+                view.CustomSort = new sort_data_family();
+                view.Filter = Filter;
             }
             catch (Exception ex)
             {
@@ -259,12 +173,13 @@ namespace SetupTool_TypeSetup
         }
 
         //----------------------------------------------------------
-        private bool Filter_ten_vat_lieu(object item)
+        private bool Filter(object item)
         {
-            if (String.IsNullOrEmpty(search_material_project.Text) || search_material_project.Text == "...")
+            if (string.IsNullOrEmpty(search_material_project.Text))
                 return true;
             else
-                return ((item as Family_Type).ten_family_type.IndexOf(search_material_project.Text, StringComparison.OrdinalIgnoreCase) >= 0);
+                return ((item as data_family).ten_family_type.IndexOf(search_material_project.Text, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    ((item as data_family).Children.Any(x => x.ten_element_type.IndexOf(search_material_project.Text, StringComparison.OrdinalIgnoreCase) >= 0)));
         }
 
         //----------------------------------------------------------
@@ -272,16 +187,12 @@ namespace SetupTool_TypeSetup
         {
             try
             {
-                if (search_material_project.Text != "...")
-                {
-                    CollectionViewSource.GetDefaultView(thong_tin_family_type.ItemsSource).Refresh();
-                }
+                CollectionViewSource.GetDefaultView(thong_tin_family_type.ItemsSource).Refresh();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
+                MessageBox.Show(ex.Message);
             }
-
         }
 
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -289,69 +200,18 @@ namespace SetupTool_TypeSetup
         {
             try
             {
-                if (thong_tin_family_type.SelectedItem is Element_Type)
+                if (thong_tin_family_type.SelectedItem != null)
                 {
-                    Element_Type type = (Element_Type)thong_tin_family_type.SelectedItem;
-                    Xem_Thong_Tin(type);
-                }
-                Change();
-            }
-            catch (Exception)
-            {
-
-            }
-        }
-
-        //----------------------------------------------------------
-        public void Xem_Thong_Tin(Element_Type type)
-        {
-            try
-            {
-                myParameters_Family = new ObservableCollection<Parameters_Family>();
-                myMaterial_Family = new ObservableCollection<Material_Family>();
-                materials = new ObservableCollection<Data>();
-
-                var elements = new FilteredElementCollector(doc).OfClass(typeof(Material)).ToList();
-                materials.Add(new Data()
-                {
-                    single_value = "<By Category>",
-                    vat_lieu = null
-                });
-                foreach (Material material in elements)
-                {
-                    materials.Add(new Data()
+                    my_parameters = new ObservableCollection<data_parameters>();
+                    my_materials = new ObservableCollection<data_materials>();
+                    my_material = new ObservableCollection<data_material>();
+                    thong_tin_kich_thuoc.ItemsSource = new ObservableCollection<data_parameters>();
+                    thong_tin_cong_tac_vat_lieu.ItemsSource = new ObservableCollection<data_materials>();
+                    if (thong_tin_family_type.SelectedItem is data_type)
                     {
-                        single_value = material.Name,
-                        vat_lieu = material
-                    });
-                }
-                var a = materials.OrderBy(x => x.single_value).ToList();
-                materials.Clear();
-                foreach (var b in a)
-                {
-                    materials.Add(b);
-                }
-
-                if (type.type_type == mySource.type_symbol)
-                {
-                    myFunctionSupport.View_Dimensions_FamilySymbol(doc, type.element_type, thong_tin_kich_thuoc, myParameters_Family, myAll_Data);
-                    myFunctionSupport.View_Material_FamilySymbol(doc, type.element_type, thong_tin_cong_tac_vat_lieu, myMaterial_Family, materials, myAll_Data);
-                }
-                else
-                {
-                    myFunctionSupport.View_Dimensions_And_Material_System(doc, type.element_type, thong_tin_kich_thuoc, myParameters_Family,
-                                                                                                 thong_tin_cong_tac_vat_lieu, myMaterial_Family, materials, myAll_Data);
-                }
-                try
-                {
-                    var list_name = type.element_type.Name.Split('_').ToList();
-                    list_name.RemoveRange(0, 3);
-                    custom.Text = string.Join("_", list_name);
-                    Change();
-                }
-                catch (Exception)
-                {
-
+                        data_type type = (data_type)thong_tin_family_type.SelectedItem;
+                        F_ViewDetail.view_detail(doc, type, my_parameters, my_materials, my_material, thong_tin_kich_thuoc, thong_tin_cong_tac_vat_lieu, unit_length);
+                    }
                 }
             }
             catch (Exception ex)
@@ -363,69 +223,46 @@ namespace SetupTool_TypeSetup
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------
         private void Change_Name_Descipline(object sender, EventArgs e)
         {
+            CollectionViewSource.GetDefaultView(category.ItemsSource).Refresh();
+            category.SelectedIndex = 0;
             Show_Tat_Ca_Family_Type();
-            Change();
         }
 
         private void Change_Name_Position(object sender, RoutedEventArgs e)
         {
             Show_Tat_Ca_Family_Type();
-            Change();
-        }
-
-        private void Change_Name_Custom(object sender, TextChangedEventArgs e)
-        {
-            Change();
-        }
-
-        //----------------------------------------------------------
-        public void Change()
-        {
-            try
-            {
-                var ptc = "";
-                Data item = (Data)descipline.SelectedItem;
-
-                string position = "";
-                if (outhome.IsChecked == true) position = myAll_Data.list_position_data[0].position_key;
-                else if (inhome.IsChecked == true) position = myAll_Data.list_position_data[1].position_key;
-                else position = myAll_Data.list_position_data[2].position_key;
-
-                Data item1 = (Data)category.SelectedItem;
-
-                //List<string> text2 = new List<string>();
-                //foreach (Parameters_Family para in myParameters_Family)
-                //{
-                //    if (para.group_parameter == "Dimensions" && Convert.ToDouble(para.gia_tri_parameter) > 0)
-                //    {
-                //        text2.Add(para.gia_tri_parameter.ToString());
-                //    }
-                //}
-                name.Text = ptc + item.ten_type + "_" + position + "_" + item1.ten_type + "_" + custom.Text;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------
         private void Refresh_All_Du_Lieu(object sender, RoutedEventArgs e)
         {
-            Lay_Type_Duoc_Chon();
-        }
-
-        //----------------------------------------------------------
-        public void Data_for_ExternalEvent()
-        {
-            myExampleDraw.myAll_Data = myAll_Data;
-            myExampleDraw.thong_tin_kich_thuoc = thong_tin_kich_thuoc;
-            myExampleDraw.thong_tin_cong_tac_vat_lieu = thong_tin_cong_tac_vat_lieu;
-            myExampleDraw.name = name;
-            myExampleDraw.thong_tin_family_type = thong_tin_family_type;
-            myExampleDraw.myFamily_Type = myFamily_Type;
-            myExampleDraw.myParameters_Family = myParameters_Family;
-            myExampleDraw.myMaterial_Family = myMaterial_Family;
+            my_family = new ObservableCollection<data_family>();
+            my_parameters = new ObservableCollection<data_parameters>();
+            my_materials = new ObservableCollection<data_materials>();
+            my_material = new ObservableCollection<data_material>();
+            thong_tin_kich_thuoc.ItemsSource = new ObservableCollection<data_parameters>();
+            thong_tin_cong_tac_vat_lieu.ItemsSource = new ObservableCollection<data_materials>();
+            thong_tin_family_type.ItemsSource = new ObservableCollection<data_materials>();
+            ElementType type = F_TypeDefault.get_type_select(uidoc, doc, descipline, category, outhome, inhome, kc);
+            Show_Tat_Ca_Family_Type();
+            if (type != null)
+            {
+                foreach (data_family family in my_family)
+                {
+                    if (family.ten_family_type == type.FamilyName)
+                    {
+                        family.ValueExpanded = true;
+                        foreach (data_type element_Type in family.Children)
+                        {
+                            if (element_Type.ten_element_type == type.Name)
+                            {
+                                element_Type.ValueIsSelect = true;
+                                F_ViewDetail.view_detail(doc, element_Type, my_parameters, my_materials, my_material, thong_tin_kich_thuoc, thong_tin_cong_tac_vat_lieu, unit_length);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -433,23 +270,24 @@ namespace SetupTool_TypeSetup
         {
             try
             {
-                if (thong_tin_family_type.SelectedItem is Element_Type)
+                if (thong_tin_family_type.SelectedItem != null)
                 {
-                    Element_Type type = (Element_Type)thong_tin_family_type.SelectedItem;
-                    if (myFamily_Type.First(x => x.ten_family_type == type.element_type.FamilyName).Children.Any(x => x.ten_element_type == name.Text) == false || type.ten_element_type == name.Text)
+                    if (thong_tin_family_type.SelectedItem is data_type)
                     {
-                        myExampleDraw.command = "Modify";
-                        Data_for_ExternalEvent();
-                        Draw.Raise();
+                        my_update.unit_length = unit_length;
+                        my_update.name = name;
+                        my_update.thong_tin_cong_tac_vat_lieu = thong_tin_cong_tac_vat_lieu;
+                        my_update.thong_tin_family_type = thong_tin_family_type;
+                        my_update.thong_tin_kich_thuoc = thong_tin_kich_thuoc;
+                        my_update.my_family = my_family;
+                        my_update.my_materials = my_materials;
+                        my_update.my_parameters = my_parameters;
+                        e_update.Raise();
                     }
                     else
                     {
-                        MessageBox.Show("Tên Type không được trùng nhau", "ERROR", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show("Please choose type and update again!!", "WARNING", MessageBoxButton.OK, MessageBoxImage.Warning);
                     }
-                }
-                else
-                {
-                    MessageBox.Show("Hãy chọn type muốn sửa và thử lại lần nữa!", "WARNING", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
             }
             catch (Exception)
@@ -463,23 +301,24 @@ namespace SetupTool_TypeSetup
         {
             try
             {
-                if (thong_tin_family_type.SelectedItem is Element_Type)
+                if (thong_tin_family_type.SelectedItem != null)
                 {
-                    Element_Type type = (Element_Type)thong_tin_family_type.SelectedItem;
-                    if (myFamily_Type.First(x => x.ten_family_type == type.element_type.FamilyName).Children.Any(x => x.ten_element_type == name.Text) == false)
+                    if (thong_tin_family_type.SelectedItem is data_type)
                     {
-                        myExampleDraw.command = "Create";
-                        Data_for_ExternalEvent();
-                        Draw.Raise();
+                        my_create.unit_length = unit_length;
+                        my_create.name = name;
+                        my_create.thong_tin_cong_tac_vat_lieu = thong_tin_cong_tac_vat_lieu;
+                        my_create.thong_tin_family_type = thong_tin_family_type;
+                        my_create.thong_tin_kich_thuoc = thong_tin_kich_thuoc;
+                        my_create.my_family = my_family;
+                        my_create.my_materials = my_materials;
+                        my_create.my_parameters = my_parameters;
+                        e_create.Raise();
                     }
                     else
                     {
-                        MessageBox.Show("Tên Type không được trùng nhau", "ERROR", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show("Please choose type and duplicate again!!", "WARNING", MessageBoxButton.OK, MessageBoxImage.Warning);
                     }
-                }
-                else
-                {
-                    MessageBox.Show("Hãy chọn type muốn duplicate và thử lại lần nữa!", "WARNING", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
             }
             catch (Exception)
@@ -493,15 +332,16 @@ namespace SetupTool_TypeSetup
         {
             try
             {
-                myExampleDraw.command = "Delete";
-                Data_for_ExternalEvent();
-                Draw.Raise();
+                my_delete.thong_tin_cong_tac_vat_lieu = thong_tin_cong_tac_vat_lieu;
+                my_delete.thong_tin_family_type = thong_tin_family_type;
+                my_delete.thong_tin_kich_thuoc = thong_tin_kich_thuoc;
+                my_delete.my_family = my_family;
+                e_delete.Raise();
             }
             catch (Exception)
             {
 
             }
         }
-
     }
 }

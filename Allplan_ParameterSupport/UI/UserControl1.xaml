@@ -7,7 +7,7 @@
     xmlns:local="clr-namespace:Allplan_ParameterSupport"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     MinHeight="1000"
-    MinWidth="300"
+    MinWidth="750"
     MaxHeight="1000"
     MaxWidth="1000"
     Background="{DynamicResource MaterialDesignPaper}"
@@ -124,7 +124,8 @@
                     materialDesign:HintAssist.Hint="Search by"
                     TextChanged="Search_Material_Project"/>
 
-                <ListView 
+                <ListView
+                    VerticalAlignment="Top"
                     Name="thong_tin_parameter"
                     MouseLeftButtonUp="Hight_Light_Cau_Kien_Duoc_Chon"
                     Margin="5 70 5 5">

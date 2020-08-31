@@ -26,6 +26,8 @@ using MessageBox = System.Windows.MessageBox;
 using Path = System.IO.Path;
 
 using System.Diagnostics;
+using WEB_SaveAs.Code.Function;
+using WEB_SaveAs.Data.Binding;
 
 namespace WEB_SaveAs
 {
@@ -34,35 +36,18 @@ namespace WEB_SaveAs
     /// </summary>
     public partial class UserControl1 : Window
     {
-        FunctionSQL mySQL;
-        FunctionSupoort myFunctionSupport;
-        ListSource mySource;
-
         UIApplication uiapp;
         UIDocument uidoc;
         Document doc;
+        string project_number;
+        string block;
+        string Class;
 
-        ExternalEventClass myExampleDraw;
-        ExternalEvent Draw;
-
+        E_SaveAs my_save_as;
+        ExternalEvent e_save_as;
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------
-        private void Window_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            if (e.LeftButton == MouseButtonState.Pressed)
-            {
-                DragMove();
-            }
-        }
-
-        private void closeWindow(object sender, RoutedEventArgs e)
-        {
-            Close();
-        }
-
-        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
-        public ObservableCollection<data_file> mydata_file { get; set; }
-        public ObservableCollection<element_list> myelement_list { get; set; }
-        public ObservableCollection<level_block> mylevel_block { get; set; }
+        ObservableCollection<data_file> my_data_file { get; set; }
+        List<Level> level_list { get; set; }
 
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------
         public string path = "";
@@ -73,32 +58,10 @@ namespace WEB_SaveAs
             uidoc = uiapp.ActiveUIDocument;
             doc = uidoc.Document;
 
-            myExampleDraw = new ExternalEventClass();
-            Draw = ExternalEvent.Create(myExampleDraw);
-
-            mySQL = new FunctionSQL();
-            myFunctionSupport = new FunctionSupoort();
-            mySource = new ListSource();
-
-            var listtotal = mySQL.SQLRead(@"Server=18.141.116.111,1433\SQLEXPRESS;Database=ManageDataBase;User Id=ManageUser; Password = manage@connect789", "Select * from dbo.PathSource", "Query", new List<string>(), new List<string>());
-            path = listtotal.Rows[0][1].ToString();
-            Function_TXT();
+            my_save_as = new E_SaveAs();
+            e_save_as = ExternalEvent.Create(my_save_as);
 
             Function_Dau_Vao();
-        }
-
-        //----------------------------------------------------------
-        public All_Data myAll_Data { get; set; }
-        public void Function_TXT()
-        {
-            try
-            {
-                myAll_Data = myFunctionSupport.Get_Data_All(path);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         //----------------------------------------------------------
@@ -106,143 +69,52 @@ namespace WEB_SaveAs
         {
             try
             {
-                myFunctionSupport.Default_Image(myAll_Data, new List<Image>() { logo_image, select_image, folder_image, refresh_image, saveas_image });
+                List<string> file_name = doc.Title.Split('_').ToList();
+                project_number = doc.ProjectInformation.Number;
+                block = doc.ProjectInformation.BuildingName;
+                Class = doc.ProjectInformation.LookupParameter("Class") == null ? "" : doc.ProjectInformation.LookupParameter("Class").AsString();
+                if (string.IsNullOrEmpty(Class)) MessageBox.Show("Share Parameter Class not found", "ERROR", MessageBoxButton.OK, MessageBoxImage.Error);
 
-                mydata_file = new ObservableCollection<data_file>();
-                myelement_list = new ObservableCollection<element_list>();
-                mylevel_block = new ObservableCollection<level_block>();
+                if (file_name.Count() > 3)
+                {
+                    List<string> format = new List<string>();
+                    if (project_number != file_name[0]) format.Add("Project Number");
 
-                folder.Text = @"C:\";
+                    if (block != file_name[1]) format.Add("Block");
 
-                Get_ELement_Link_Or_NoLink(doc);
-                Data_File();
+                    if (Class != file_name[3]) format.Add("Class");
+
+                    if (format.Count() == 0)
+                    {
+                        my_data_file = new ObservableCollection<data_file>();
+
+                        folder.Text = @"C:\";
+
+                        F_ElementByLevel.get_element_by_level(doc, level_list, level);
+                        F_Folder.get_file_data(doc, my_data_file, folder, thong_tin_file);
+                    }
+                    else
+                    {
+                        MessageBox.Show(string.Format("Data is incorrect.\nPlease check {0} and try again!", string.Join(",", format)), "ERROR", MessageBoxButton.OK, MessageBoxImage.Error);
+                        this.Close();
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("File name is incorrect. Please check and try again!", "ERROR", MessageBoxButton.OK, MessageBoxImage.Error);
+                    this.Close();
+                }
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
-            }
-        }
-
-        //----------------------------------------------------------
-        public List<Level> level_list { get; set; }
-        public void Get_ELement_Link_Or_NoLink(Document doc)
-        {
-            try
-            {
-                level_list = new FilteredElementCollector(doc).OfClass(typeof(Level)).Cast<Level>().ToList();
-                var list_element = new FilteredElementCollector(doc)
-                    .WhereElementIsNotElementType()
-                    .Where(x => x.Parameters.Cast<Parameter>().Any(y => y.Definition.Name == "Volume" || y.Definition.Name == "Area" || y.Definition.Name == "Length") == true)
-                    .Where(x => x.Category.CategoryType.ToString() == "Model" && x.Category.AllowsBoundParameters == true)
-                    .ToList();
-
-                foreach(Element element in list_element)
-                {
-                    string block = doc.ProjectInformation.BuildingName;
-
-                    string level = "";
-                    if (element.LookupParameter(myAll_Data.list_parameter_share_data[4]).AsString() != null) level = element.LookupParameter(myAll_Data.list_parameter_share_data[4]).AsString();
-
-                    double elevation = 100000000;
-                    try
-                    {
-                        elevation = level_list.First(x => level == x.Name).Elevation;
-                    }
-                    catch (Exception)
-                    {
-
-                    }
-                    myelement_list.Add(new element_list
-                    {
-                        cau_kien = element,
-                        level = myFunctionSupport.RemoveUnicode(level),
-                        elevation = elevation
-                    });
-                }
-
-                
-                mylevel_block = new ObservableCollection<level_block>(myelement_list.GroupBy(x => new
-                {
-                    x.level,
-                    x.elevation
-                }).Where(x => !string.IsNullOrEmpty(x.Key.level)).Select(y => new level_block()
-                {
-                    number = doc.ProjectInformation.Number,
-                    block = doc.ProjectInformation.BuildingName,
-                    level = y.Key.level,
-                    descipline = doc.Title.Split('_')[3],
-                    elevation = y.Key.elevation
-                }).OrderByDescending(z => z.elevation));
-
-                level.ItemsSource = mylevel_block;
-                level.SelectedIndex = 0;
-            }
-            catch (Exception ex)
-            {
-
             }
         }
 
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------
         private void Select_Folder(object sender, RoutedEventArgs e)
         {
-            Select();
-        }
-
-        //----------------------------------------------------------
-        public void Select()
-        {
-            try
-            {
-                FolderBrowserDialog folderBrowser = new FolderBrowserDialog();
-                if (folderBrowser.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                {
-                    folder.Text  = folderBrowser.SelectedPath;
-                }
-                Data_File();
-            }
-            catch (Exception)
-            {
-
-            }
-        }
-
-        //----------------------------------------------------------
-        public void Data_File()
-        {
-            try
-            {
-                mydata_file = new ObservableCollection<data_file>();
-                List<Level> list_level = new FilteredElementCollector(doc).OfClass(typeof(Level)).Cast<Level>().ToList();
-                foreach (string file in Directory.GetFiles(folder.Text, "*.rvt*").ToList())
-                {
-                    FileInfo infor = new FileInfo(file);
-                    double elevation = 1000000000;
-                    try
-                    {
-                        elevation = list_level.Where(x => myFunctionSupport.RemoveUnicode(x.Name) == infor.Name.Split('_')[1]).First().Elevation;
-                    }
-                    catch (Exception)
-                    {
-
-                    }
-                    mydata_file.Add(new data_file()
-                    {
-                        path = file,
-                        name = infor.Name,
-                        size = Math.Round(Convert.ToDouble(infor.Length / (1024)), 2).ToString() + " Kb",
-                        elevation = elevation
-                    });
-                }
-                thong_tin_file.ItemsSource = mydata_file;
-
-                thong_tin_file.Items.SortDescriptions.Add(new SortDescription("elevation", ListSortDirection.Descending));
-                thong_tin_file.Items.SortDescriptions.Add(new SortDescription("name", ListSortDirection.Descending));
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
+            F_Folder.select_folder(doc, my_data_file, folder, thong_tin_file);
         }
 
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -275,7 +147,7 @@ namespace WEB_SaveAs
                         data_file item = (data_file)thong_tin_file.SelectedItems[i];
                         File.Delete(item.path);
                     }
-                    Data_File();
+                    F_Folder.get_file_data(doc, my_data_file, folder, thong_tin_file);
                 }
             }
             catch (Exception)
@@ -289,50 +161,13 @@ namespace WEB_SaveAs
         {
             try
             {
-                Get_ELement_Link_Or_NoLink(doc);
-                Data_File();
+                F_ElementByLevel.get_element_by_level(doc, level_list, level);
+                F_Folder.get_file_data(doc, my_data_file, folder, thong_tin_file);
             }
             catch (Exception)
             {
 
             }
-        }
-
-        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
-        private void Save_As(object sender, RoutedEventArgs e)
-        {
-            string result = Save();
-        }
-
-        //----------------------------------------------------------
-        public void Data_for_ExternalEvent()
-        {
-            myExampleDraw.myAll_Data = myAll_Data;
-            myExampleDraw.level = level;
-            myExampleDraw.path = folder;
-            myExampleDraw.name = name;
-            myExampleDraw.option_normal = option_normal;
-            myExampleDraw.myelement_list = myelement_list;
-            myExampleDraw.mydata_file = mydata_file;
-            myExampleDraw.thong_tin_file = thong_tin_file;
-        }
-
-        //----------------------------------------------------------
-        public string Save()
-        {
-            string result = "F";
-            try
-            {
-                myExampleDraw.command = "Save As";
-                Data_for_ExternalEvent();
-                Draw.Raise();
-                result = "S";
-            }
-            catch (Exception)
-            {
-
-            }
-            return result;
         }
 
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -346,6 +181,34 @@ namespace WEB_SaveAs
             {
 
             }
+        }
+        
+        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
+        private void Save_As(object sender, RoutedEventArgs e)
+        {
+            string result = Save();
+        }
+
+        //----------------------------------------------------------
+        public string Save()
+        {
+            string result = "F";
+            try
+            {
+                my_save_as.level = level;
+                my_save_as.path = folder;
+                my_save_as.name = name;
+                my_save_as.option_normal = option_normal;
+                my_save_as.my_data_file = my_data_file;
+                my_save_as.thong_tin_file = thong_tin_file;
+                e_save_as.Raise();
+                result = "S";
+            }
+            catch (Exception)
+            {
+
+            }
+            return result;
         }
 
         

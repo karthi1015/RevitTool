@@ -63,7 +63,8 @@ namespace ARC_Quatity
                     {
                         for (var i = 0; i < parameters.Count; i++)
                         {
-                            commandDelete.Parameters.Add(new SqlParameter(parameters[i], parametersValue[i])).Value = parametersValue[i];
+                            SqlParameter Parameter = new SqlParameter(parameters[i], parametersValue[i]);
+                            commandDelete.Parameters.Add(Parameter).Value = parametersValue[i];
                         }
                     }
                 }
@@ -93,7 +94,8 @@ namespace ARC_Quatity
                     {
                         for (var i = 0; i < parameters.Count; i++)
                         {
-                            commandDelete.Parameters.Add(new SqlParameter(parameters[i], parametersValue[i])).Value = parametersValue[i];
+                            SqlParameter Parameter = new SqlParameter(parameters[i], parametersValue[i]);
+                            commandDelete.Parameters.Add(Parameter).Value = parametersValue[i];
                         }
                     }
                 }

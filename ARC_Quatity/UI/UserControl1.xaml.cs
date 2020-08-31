@@ -1,5 +1,6 @@
 ﻿using ARC_Quatity.Code;
 using ARC_Quatity.Code.Function;
+using ARC_Quatity.Code.FunctionQuantityInput;
 using ARC_Quatity.Code.FunctionWEB;
 using ARC_Quatity.Data;
 using ARC_Quatity.Data.Binding;
@@ -42,6 +43,7 @@ namespace ARC_Quatity
         string Class;
         string unit_length;
         string id_file;
+        string user;
 
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------
         ObservableCollection<data_element_link> my_element_link { get; set; }
@@ -50,6 +52,8 @@ namespace ARC_Quatity
         ObservableCollection<data_quantity> my_quantity_detail { get; set; }
         ObservableCollection<data_file_link> my_file_link { get; set; }
         ObservableCollection<data_table_note> my_table_note { get; set; }
+        List<string> material_of_element_in_project { get; set; }
+        List<data_quantity> my_quantity_input { get; set; }
 
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------
         public UserControl1(UIApplication _uiapp)
@@ -59,11 +63,19 @@ namespace ARC_Quatity
             uidoc = uiapp.ActiveUIDocument;
             doc = uidoc.Document;
 
+            user = uiapp.Application.Username;
+            string myIP = Dns.GetHostAddresses(Dns.GetHostName()).First(x => x.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork).ToString();
+            string path = Source.pathUserPassword + "\\" + myIP;
+            if (File.Exists(path))
+            {
+                data_information information = JsonConvert.DeserializeObject<data_information>(File.ReadAllText(path));
+                user = information.user_name;
+            }
+
             my_visible_link = new E_VisibleLink();
             e_visible_link = ExternalEvent.Create(my_visible_link);
 
             Function_Dau_Vao();
-            F_QuantityNotes.Get_Data_Notes_Web(project_number, Class, my_table_note, thong_tin_quantity_total_web);
         }
 
         //----------------------------------------------------------
@@ -74,9 +86,42 @@ namespace ARC_Quatity
                 List<string> file_name = doc.Title.Split('_').ToList();
                 project_number = doc.ProjectInformation.Number;
                 block = doc.ProjectInformation.BuildingName;
-                Class = doc.ProjectInformation.LookupParameter("Class").AsString();
-                id_file = file_name[0] + "_" + file_name[1] + "_" + file_name[2] + "_" + file_name[3] + "_";
-                get_unit_length_type();
+                Class = doc.ProjectInformation.LookupParameter("Class") == null ? "" : doc.ProjectInformation.LookupParameter("Class").AsString();
+                if (string.IsNullOrEmpty(Class)) MessageBox.Show("Share Parameter Class not found", "ERROR", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                if (file_name.Count() > 3)
+                {
+                    List<string> format = new List<string>();
+                    if (project_number != file_name[0]) format.Add("Project Number");
+
+                    if (block != file_name[1]) format.Add("Block");
+
+                    if (Class != file_name[3]) format.Add("Class");
+
+                    if (format.Count() == 0)
+                    {
+                        id_file = file_name[0] + "_" + file_name[1] + "_" + file_name[2] + "_" + file_name[3] + "_";
+                        unit_length = F_GetUnits.get_unit_length_type(doc);
+
+                        input_block.Text = block;
+                        F_Material.get_material_combobox(doc, input_material);
+
+                        show_data_input(id_file, thong_tin_quantity_input);
+                        material_of_element_in_project = new List<string>();
+
+                        F_QuantityNotes.Get_Data_Notes_Web(project_number, Class, my_table_note, thong_tin_quantity_total_web);
+                    }
+                    else
+                    {
+                        MessageBox.Show(string.Format("Data is incorrect.\nPlease check {0} and try again!", string.Join(",", format)), "ERROR", MessageBoxButton.OK, MessageBoxImage.Error);
+                        this.Close();
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("File name is incorrect. Please check and try again!", "ERROR", MessageBoxButton.OK, MessageBoxImage.Error);
+                    this.Close();
+                }
             }
             catch (Exception ex)
             {
@@ -85,12 +130,9 @@ namespace ARC_Quatity
         }
 
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------
-        private void get_quantity_all_Click(object sender, RoutedEventArgs e)
-        {
-            Get_Quantity_All();
-        }
+        #region Show_Khoi_Luong_Len_ListView
         //----------------------------------------------------------
-        public void Get_Quantity_All()
+        private void get_quantity_all_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -106,7 +148,9 @@ namespace ARC_Quatity
                     F_GetElement.Get_ELement_Link_Or_NoLink(doc, my_element_link);
 
                     Show_Khoi_Luong_Len_ListView();
-                    F_Chart.Show_Du_Lieu_Len_Chart(bieu_do_category, my_element_link, DataContext, this);
+                    material_of_element_in_project = my_quantity_total.Select(x => x.ma_cong_tac).ToList();
+
+                    F_Chart.Show_Du_Lieu_Len_Chart(bieu_do_category, DataContext, this, my_element_link);
                     Search();
                 }
                 else
@@ -119,22 +163,6 @@ namespace ARC_Quatity
             {
                 MessageBox.Show(ex.Message);
                 this.Close();
-            }
-        }
-
-        //----------------------------------------------------------
-        private void get_unit_length_type()
-        {
-            try
-            {
-                Units units = doc.GetUnits();
-                List<UnitType> unit_types = UnitUtils.GetValidUnitTypes().ToList();
-                FormatOptions format_option = units.GetFormatOptions(unit_types.First(x => x == UnitType.UT_Length));
-                unit_length = LabelUtils.GetLabelFor(format_option.DisplayUnits);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
             }
         }
 
@@ -158,18 +186,18 @@ namespace ARC_Quatity
                     if (element is FamilyInstance)
                     {
                         FamilyInstance familyInstance = element as FamilyInstance;
-                        F_GetQuantity.Support_Get_Khoi_Luong(element, levels, my_quatity_item_support, doc, Class, unit_length, block);
+                        F_GetQuantity.Support_Get_Khoi_Luong(doc, element, levels, Class, unit_length, block, my_quatity_item_support);
                         List<ElementId> elements_child = familyInstance.GetSubComponentIds().ToList();
                         foreach (ElementId id in elements_child)
                         {
                             FamilyInstance model_child = doc.GetElement(id) as FamilyInstance;
-                            F_GetQuantity.Support_Get_Khoi_Luong(model_child, levels, my_quatity_item_support, doc, Class, unit_length, block);
-                            Support_Show_Khoi_Luong_Len_ListView(model_child, levels, my_quatity_item_support, doc);
+                            F_GetQuantity.Support_Get_Khoi_Luong(doc, model_child, levels, Class, unit_length, block, my_quatity_item_support);
+                            Support_Show_Khoi_Luong_Len_ListView(model_child, levels, my_quatity_item_support, doc, Class, unit_length, block);
                         }
                     }
                     else
                     {
-                        F_GetQuantity.Support_Get_Khoi_Luong(element, levels, my_quatity_item_support, doc, Class, unit_length, block);
+                        F_GetQuantity.Support_Get_Khoi_Luong(doc, element, levels, Class, unit_length, block, my_quatity_item_support);
                     }
 
                     my_quatity_item_support.ToList().ForEach(x => my_quatity_item.Add(x));
@@ -236,7 +264,7 @@ namespace ARC_Quatity
         }
 
         //----------------------------------------------------------
-        private void Support_Show_Khoi_Luong_Len_ListView(FamilyInstance model_child, List<Level> levels, ObservableCollection<data_quantity> my_quatity_item, Document doc)
+        void Support_Show_Khoi_Luong_Len_ListView(FamilyInstance model_child, List<Level> levels, ObservableCollection<data_quantity> my_quatity_item_support, Document doc, string Class, string unit_length, string block)
         {
             try
             {
@@ -245,8 +273,8 @@ namespace ARC_Quatity
                     foreach (ElementId id_for in model_child.GetSubComponentIds())
                     {
                         model_child = doc.GetElement(id_for) as FamilyInstance;
-                        F_GetQuantity.Support_Get_Khoi_Luong(model_child, levels, my_quatity_item, doc, Class, unit_length, block);
-                        Support_Show_Khoi_Luong_Len_ListView(model_child, levels, my_quatity_item, doc);
+                        F_GetQuantity.Support_Get_Khoi_Luong(doc, model_child, levels, Class, unit_length, block, my_quatity_item_support);
+                        Support_Show_Khoi_Luong_Len_ListView(model_child, levels, my_quatity_item_support, doc, Class, unit_length, block);
                     }
                 }
             }
@@ -256,7 +284,30 @@ namespace ARC_Quatity
             }
         }
 
+        //----------------------------------------------------------
+        public bool Filter_thong_tin_detail(object item)
+        {
+            bool value = false;
+            try
+            {
+                if (item_select == null)
+                    return false;
+                else
+                    return ((item as data_quantity).ten_vat_lieu.Equals(item_select.ten_vat_lieu, StringComparison.OrdinalIgnoreCase) &&
+                            (item as data_quantity).block.Equals(item_select.block, StringComparison.OrdinalIgnoreCase) &&
+                            (item as data_quantity).level.Equals(item_select.level, StringComparison.OrdinalIgnoreCase));
+            }
+            catch (Exception ex)
+            {
+                //MessageBox.Show(ex.Message);
+            }
+            return value;
+        }
+        #endregion
+
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------
+        #region Thao tác trên UI
+        //----------------------------------------------------------
         data_quantity item_select = null;
         private void Chon_Vat_Lieu_total(object sender, MouseButtonEventArgs e)
         {
@@ -309,13 +360,13 @@ namespace ARC_Quatity
             return search.IndexOf(search_material_project.Text.Replace("_", ""), StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
-        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
+        //----------------------------------------------------------
         private void Xem_Du_Lieu_Quantity_total(object sender, RoutedEventArgs e)
         {
             Search();
         }
 
-        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
+        //----------------------------------------------------------
         private void Chon_Cau_Kien_detail(object sender, MouseButtonEventArgs e)
         {
             try
@@ -336,26 +387,6 @@ namespace ARC_Quatity
         }
 
         //----------------------------------------------------------
-        private bool Filter_thong_tin_detail(object item)
-        {
-            bool value = false;
-            try
-            {
-                if (item_select == null)
-                    return false;
-                else
-                    return ((item as data_quantity).ten_vat_lieu.Equals(item_select.ten_vat_lieu, StringComparison.OrdinalIgnoreCase) &&
-                            (item as data_quantity).block.Equals(item_select.block, StringComparison.OrdinalIgnoreCase) &&
-                            (item as data_quantity).level.Equals(item_select.level, StringComparison.OrdinalIgnoreCase));
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-            return value;
-        }
-
-        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
         private void Chon_Cau_Kien_element(object sender, MouseButtonEventArgs e)
         {
             try
@@ -375,13 +406,13 @@ namespace ARC_Quatity
             }
         }
 
-        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
+        //----------------------------------------------------------
         private void Xem_Du_Lieu_Quantity_element(object sender, RoutedEventArgs e)
         {
             Search();
         }
 
-        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
+        //----------------------------------------------------------
         private void Search_Material_Project(object sender, TextChangedEventArgs e)
         {
             Search();
@@ -394,21 +425,21 @@ namespace ARC_Quatity
             {
                 if (total.IsChecked == true)
                 {
-                    if (thong_tin_quantity_total_project.Items.Count > 0)
-                    {
-                        CollectionView view = (CollectionView)CollectionViewSource.GetDefaultView(thong_tin_quantity_total_project.ItemsSource);
-                        view.Filter = Filter_thong_tin_total;
-                        CollectionViewSource.GetDefaultView(thong_tin_quantity_total_project.ItemsSource).Refresh();
-                    }
+                    CollectionView view = (CollectionView)CollectionViewSource.GetDefaultView(thong_tin_quantity_total_project.ItemsSource);
+                    view.Filter = Filter_thong_tin_total;
+                    CollectionViewSource.GetDefaultView(thong_tin_quantity_total_project.ItemsSource).Refresh();
                 }
                 if (any.IsChecked == true)
                 {
-                    if (thong_tin_quantity_project.Items.Count > 0)
-                    {
-                        CollectionView view1 = (CollectionView)CollectionViewSource.GetDefaultView(thong_tin_quantity_project.ItemsSource);
-                        view1.Filter = Filter_thong_tin_total;
-                        CollectionViewSource.GetDefaultView(thong_tin_quantity_project.ItemsSource).Refresh();
-                    }
+                    CollectionView view1 = (CollectionView)CollectionViewSource.GetDefaultView(thong_tin_quantity_project.ItemsSource);
+                    view1.Filter = Filter_thong_tin_total;
+                    CollectionViewSource.GetDefaultView(thong_tin_quantity_project.ItemsSource).Refresh();
+                }
+                if (new_quantity.IsChecked == true)
+                {
+                    CollectionView view1 = (CollectionView)CollectionViewSource.GetDefaultView(thong_tin_quantity_input.ItemsSource);
+                    view1.Filter = Filter_thong_tin_total;
+                    CollectionViewSource.GetDefaultView(thong_tin_quantity_input.ItemsSource).Refresh();
                 }
 
                 if (any.IsChecked == true)
@@ -416,12 +447,9 @@ namespace ARC_Quatity
                     Selection selection = uidoc.Selection;
                     selection.SetElementIds(new List<ElementId>());
 
-                    if (thong_tin_detail.Items.Count > 0)
-                    {
-                        item_select = null;
-                        CollectionView view_detail = (CollectionView)CollectionViewSource.GetDefaultView(thong_tin_detail.ItemsSource);
-                        view_detail.Filter = Filter_thong_tin_detail;
-                    }
+                    item_select = null;
+                    CollectionView view_detail = (CollectionView)CollectionViewSource.GetDefaultView(thong_tin_detail.ItemsSource);
+                    view_detail.Filter = Filter_thong_tin_detail;
                     bieu_do_download.Value = thong_tin_quantity_project.Items.Count;
                 }
 
@@ -430,42 +458,27 @@ namespace ARC_Quatity
                     Selection selection = uidoc.Selection;
                     selection.SetElementIds(new List<ElementId>());
 
-                    if (thong_tin_detail.Items.Count > 0)
-                    {
-                        item_select = (data_quantity)thong_tin_quantity_total_project.SelectedItem;
-                        CollectionView view_detail = (CollectionView)CollectionViewSource.GetDefaultView(thong_tin_detail.ItemsSource);
-                        view_detail.Filter = Filter_thong_tin_detail;
-                    }
+                    item_select = (data_quantity)thong_tin_quantity_total_project.SelectedItem;
+                    CollectionView view_detail = (CollectionView)CollectionViewSource.GetDefaultView(thong_tin_detail.ItemsSource);
+                    view_detail.Filter = Filter_thong_tin_detail;
                     bieu_do_download.Value = thong_tin_quantity_total_project.Items.Count;
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                //MessageBox.Show(ex.Message);
             }
         }
 
-        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
+        //----------------------------------------------------------
         private void Search_By(object sender, RoutedEventArgs e)
         {
             Search();
         }
+        #endregion
 
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------
-        private void Bao_Gom_Ca_Link_File(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                Get_List_Link_File(false);
-                Khoi_Luong_Cua_Link_File();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-
-        }
-
+        #region Link File
         //----------------------------------------------------------
         public void Get_List_Link_File(bool check)
         {
@@ -534,9 +547,9 @@ namespace ARC_Quatity
                 if (my_file_link.Count() > 0)
                 {
                     Show_Khoi_Luong_Len_ListView();
-                    F_Chart.Show_Du_Lieu_Len_Chart(bieu_do_category, my_element_link, DataContext, this);
+
+                    F_Chart.Show_Du_Lieu_Len_Chart(bieu_do_category, DataContext, this, my_element_link);
                 }
-                Search();
 
                 e_visible_link.Raise();
             }
@@ -547,11 +560,34 @@ namespace ARC_Quatity
         }
 
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------
+        private void Bao_Gom_Ca_Link_File(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                Get_List_Link_File(false);
+                Khoi_Luong_Cua_Link_File();
+                Search();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
+        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
         private void Lay_Hoac_Khong_Lay_Khoi_Luong_Link(object sender, RoutedEventArgs e)
         {
-            Khoi_Luong_Cua_Link_File();
-            if (my_file_link.Any(x => x.chon_file_link != true) == false) check_all.IsChecked = true;
-            if (my_file_link.Any(x => x.chon_file_link == true) == false) check_all.IsChecked = false;
+            try
+            {
+                Khoi_Luong_Cua_Link_File();
+                Search();
+                if (my_file_link.Any(x => x.chon_file_link != true) == false) check_all.IsChecked = true;
+                if (my_file_link.Any(x => x.chon_file_link == true) == false) check_all.IsChecked = false;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -564,160 +600,48 @@ namespace ARC_Quatity
                     link.chon_file_link = check_all.IsChecked.Value;
                 }
                 thong_tin_link_file.Items.Refresh();
+
                 Khoi_Luong_Cua_Link_File();
+                Search();
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
             }
         }
+        #endregion
 
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------
+        #region Upload
         private void Upload_Du_Lieu(object sender, RoutedEventArgs e)
         {
-            string result = Upload();
+            string result = F_UploadData.Upload(uiapp, doc, thong_tin_quantity_total_project, thong_tin_quantity_project, material_of_element_in_project, id_file, user);
             if (result == "S") MessageBox.Show("Upload Success!", "SUCCESS", MessageBoxButton.OK, MessageBoxImage.Information);
         }
-
-        //----------------------------------------------------------
-        public string Upload()
-        {
-            string result = "F";
-            try
-            {
-                List<string> color_check = my_quantity_total.Select(x => x.color_sort).ToList();
-                if (color_check.Distinct().ToList().Count() == 1)
-                {
-                    string user = uiapp.Application.Username;
-                    string hostName = Dns.GetHostName();
-                    string myIP = Dns.GetHostByName(hostName).AddressList[0].ToString();
-                    string path = Source.pathUserPassword + "\\" + myIP;
-                    if (File.Exists(path))
-                    {
-                        var infor = File.ReadAllLines(path).ToList();
-                        user = infor[0];
-                    }
-
-                    List<List<string>> values_material = new List<List<string>>();
-                    List<List<string>> values_element = new List<List<string>>();
-
-                    CollectionViewSource.GetDefaultView(thong_tin_quantity_total_project.ItemsSource).Cast<data_quantity>().ToList().ForEach(x =>
-                        values_material.Add(new List<string>()
-                        {
-                            id_file,
-                            x.block,
-                            x.level,
-                            x.ten_vat_lieu,
-                            x.ma_cong_tac,
-                            x.quantity.ToString(),
-                            x.don_vi,
-                            user,
-                            DateTime.Now.ToString()
-                        }));
-
-                    CollectionViewSource.GetDefaultView(thong_tin_quantity_project.ItemsSource).Cast<data_quantity>().ToList().ForEach(x =>
-                        values_element.Add(new List<string>()
-                        {
-                            id_file,
-                            x.block,
-                            x.level,
-                            x.id_cau_kien,
-                            x.ten_cau_kien,
-                            x.ten_vat_lieu,
-                            x.ma_cong_tac,
-                            x.quantity.ToString(),
-                            x.don_vi,
-                            user,
-                            DateTime.Now.ToString()
-                        }));
-
-                    List<List<List<string>>> values = new List<List<List<string>>>() { values_material, values_element };
-                    result = F_Upload.Upload(doc, values, my_quantity_total.Select(x => x.ma_cong_tac).ToList(), id_file);
-                }
-                else
-                {
-                    MessageBox.Show("Missing data. Upload fail!", "ERROR", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-            return result;
-        }
+        #endregion
 
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------
-        private void Element_Select(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                my_element_link = new ObservableCollection<data_element_link>();
-                my_quantity_total = new ObservableCollection<data_quantity>();
-                my_quatity_item = new ObservableCollection<data_quantity>();
-                my_quantity_detail = new ObservableCollection<data_quantity>();
-                my_file_link = new ObservableCollection<data_file_link>();
-
-                get_unit_length_type();
-
-                F_GetElement.get_element_by_select(uidoc, doc, my_element_link);
-
-                Show_Khoi_Luong_Len_ListView();
-
-                F_Chart.Show_Du_Lieu_Len_Chart(bieu_do_category, my_element_link, DataContext, this);
-
-                Search();
-
-                Get_Source();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
+        #region WEB
         //----------------------------------------------------------
-        public void Support_Foreach(FamilyInstance model_child)
-        {
-            try
-            {
-                if (model_child.GetSubComponentIds().ToList().Count() > 0)
-                {
-                    foreach (ElementId id_for in model_child.GetSubComponentIds())
-                    {
-                        model_child = doc.GetElement(id_for) as FamilyInstance;
-                        my_element_link.Add(new data_element_link() { cau_kien = doc.GetElement(id_for), doc = doc });
-                        Support_Foreach(model_child);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
         void Get_Source()
         {
             try
             {
-                if (thong_tin_quantity_total_project.Items.Count > 0)
-                {
-                    CollectionView view = (CollectionView)CollectionViewSource.GetDefaultView(thong_tin_quantity_total_project.ItemsSource);
-                    view.Filter = Filter_thong_tin_total;
-                    CollectionViewSource.GetDefaultView(thong_tin_quantity_total_project.ItemsSource).Refresh();
-                }
+                CollectionView view = (CollectionView)CollectionViewSource.GetDefaultView(thong_tin_quantity_total_project.ItemsSource);
+                view.Filter = Filter_thong_tin_total;
+                CollectionViewSource.GetDefaultView(thong_tin_quantity_total_project.ItemsSource).Refresh();
 
-                if (thong_tin_quantity_project.Items.Count > 0)
-                {
-                    CollectionView view1 = (CollectionView)CollectionViewSource.GetDefaultView(thong_tin_quantity_project.ItemsSource);
-                    view1.Filter = Filter_thong_tin_total;
-                    CollectionViewSource.GetDefaultView(thong_tin_quantity_project.ItemsSource).Refresh();
-                }
+                CollectionView view1 = (CollectionView)CollectionViewSource.GetDefaultView(thong_tin_quantity_project.ItemsSource);
+                view1.Filter = Filter_thong_tin_total;
+                CollectionViewSource.GetDefaultView(thong_tin_quantity_project.ItemsSource).Refresh();
+
+                CollectionView view2 = (CollectionView)CollectionViewSource.GetDefaultView(thong_tin_quantity_input.ItemsSource);
+                view2.Filter = Filter_thong_tin_total;
+                CollectionViewSource.GetDefaultView(thong_tin_quantity_input.ItemsSource).Refresh();
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                //MessageBox.Show(ex.Message);
             }
         }
 
@@ -745,25 +669,198 @@ namespace ARC_Quatity
         //----------------------------------------------------------
         private void Upload_Du_Lieu_WEB(object sender, RoutedEventArgs e)
         {
-            if (thong_tin_quantity_total_web.SelectedItem != null)
+            try
             {
-                data_table_note item = (data_table_note)thong_tin_quantity_total_web.SelectedItem;
-                Get_Source();
-                string result = Upload();
-                if (result == "S")
+                if (thong_tin_quantity_total_web.SelectedItem != null)
                 {
-                    MessageBox.Show("Upload Success!", "SUCCESS", MessageBoxButton.OK, MessageBoxImage.Information);
-                    List<string> para = new List<string>() { "@DBProjectNumber", "@DBId", "@DBStatus" };
-                    var a = JsonConvert.SerializeObject(new data_status() { open = true, edited = true });
-                    foreach (string id in item.id.Split('\n').ToList())
+                    data_table_note item = (data_table_note)thong_tin_quantity_total_web.SelectedItem;
+                    Get_Source();
+                    string result = "F";
+                    if (thong_tin_quantity_total_project.Items.Count > 0)
                     {
-                        List<object> para_value = new List<object>() { project_number, id, a };
-                        SQL.SQLWrite(Source.path_WEB, "dbo.spUpdate_OnlyStatusQuantityNotes", Source.type_Procedure, para, para_value);
+                        result = F_UploadData.Upload(uiapp, doc, thong_tin_quantity_total_project, thong_tin_quantity_project, material_of_element_in_project, id_file, user);
                     }
-                    my_table_note.Remove(item);
-                    thong_tin_quantity_total_web.Items.Refresh();
+                    if (thong_tin_quantity_input.Items.Count > 0)
+                    {
+                        F_SaveData.save_data_input(uiapp, doc, input_block, input_level, input_material, input_id, input_quantity, input_unit, id_file, my_quantity_input, false, user);
+                        show_data_input(id_file, thong_tin_quantity_input);
+                        result = "S";
+                    }
+                    if (result == "S")
+                    {
+                        MessageBox.Show("Upload Success!", "SUCCESS", MessageBoxButton.OK, MessageBoxImage.Information);
+                        List<string> para = new List<string>() { "@DBProjectNumber", "@DBId", "@DBStatus" };
+                        for (int i = 0; i < item.ids.Count(); i++)
+                        {
+                            var a = JsonConvert.SerializeObject(new data_status() { open = false, edited = item.editeds[i] });
+                            List<object> para_value = new List<object>() { project_number, item.ids[i], a };
+                            SQL.SQLWrite(Source.path_WEB, "dbo.spUpdate_OnlyStatusQuantityNotes", Source.type_Procedure, para, para_value);
+                        }
+                        F_QuantityNotes.Get_Data_Notes_Web(project_number, Class, my_table_note, thong_tin_quantity_total_web);
+                    }
+                    else
+                    {
+                        MessageBox.Show("Missing data. Upload fail!", "ERROR", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
+        #endregion
+
+        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
+        #region thêm khối lượng tính tay
+        //----------------------------------------------------------
+        private void show_data_input(string id_file, ListView thong_tin_quantity_input)
+        {
+            try
+            {
+                my_quantity_input = new List<data_quantity>();
+                var para = new List<string>() { "@DBProjectNumber", "@DBIdFile", "@DBInput" };
+                var para_value = new List<string>() { project_number, id_file, "Input" };
+                var data = SQL.SQLRead(Source.path_revit, "dbo.sp_read_quantity_by_idfile", Source.type_Procedure, para, para_value);
+                if (data.Rows.Count > 0)
+                {
+                    List<data_quantity> data_input = new List<data_quantity>();
+                    for (int i = 0; i < data.Rows.Count; i++)
+                    {
+                        data_input.Add(new data_quantity()
+                        {
+                            block = data.Rows[i]["BuildingName"].ToString(),
+                            level = data.Rows[i]["Level"].ToString(),
+                            ten_vat_lieu = data.Rows[i]["MaterialName"].ToString(),
+                            ma_cong_tac = data.Rows[i]["ID"].ToString(),
+                            quantity = Convert.ToDouble(data.Rows[i]["Quantity"]),
+                            don_vi = data.Rows[i]["Unit"].ToString(),
+                        });
+                    }
+                    thong_tin_quantity_input.ItemsSource = data_input;
+                    CollectionView view = (CollectionView)CollectionViewSource.GetDefaultView(thong_tin_quantity_input.ItemsSource);
+                    view.SortDescriptions.Add(new SortDescription("block", ListSortDirection.Ascending));
+                    view.SortDescriptions.Add(new SortDescription("level", ListSortDirection.Descending));
+                    view.SortDescriptions.Add(new SortDescription("ma_cong_tac", ListSortDirection.Ascending));
+                    view.SortDescriptions.Add(new SortDescription("ten_vat_lieu", ListSortDirection.Ascending));
+
+                    view.Filter = Filter_thong_tin_total;
+
+                    my_quantity_input = data_input;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
+        private void select_material_quantity_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (input_material.SelectedItem != null)
+                {
+                    data_material item = (data_material)input_material.SelectedItem;
+                    input_id.Text = item.id;
+                    input_unit.Text = item.unit;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
+        //----------------------------------------------------------
+        private void input_quantity_data_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(input_block.Text) && !string.IsNullOrEmpty(input_level.Text) && input_material.SelectedItem != null &&
+                    !string.IsNullOrEmpty(input_id.Text) && !string.IsNullOrEmpty(input_quantity.Text) && !string.IsNullOrEmpty(input_unit.Text))
+                {
+                    bool update = F_SaveData.save_data_input(uiapp, doc, input_block, input_level, input_material, input_id, input_quantity, input_unit, id_file, my_quantity_input, true, user);
+                    if (update) show_data_input(id_file, thong_tin_quantity_input);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
+        //----------------------------------------------------------
+        private void Chon_Vat_Lieu_input(object sender, MouseButtonEventArgs e)
+        {
+            try
+            {
+                if (thong_tin_quantity_input.SelectedItem != null)
+                {
+                    data_quantity item = (data_quantity)thong_tin_quantity_input.SelectedItem;
+                    input_block.Text = item.block;
+                    input_level.Text = item.level;
+                    input_material.SelectedItem = CollectionViewSource.GetDefaultView(input_material.ItemsSource).Cast<data_material>().First(x => x.name == item.ten_vat_lieu);
+                    input_id.Text = item.ma_cong_tac;
+                    input_quantity.Text = item.quantity.ToString();
+                    input_unit.Text = item.don_vi;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
+        //----------------------------------------------------------
+        private void update_data_input_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (thong_tin_quantity_input.SelectedItem != null)
+                {
+                    data_quantity item = (data_quantity)thong_tin_quantity_input.SelectedItem;
+
+                    if (!string.IsNullOrEmpty(input_block.Text) && !string.IsNullOrEmpty(input_level.Text) && input_material.SelectedItem != null &&
+                    !string.IsNullOrEmpty(input_id.Text) && !string.IsNullOrEmpty(input_quantity.Text) && !string.IsNullOrEmpty(input_unit.Text))
+                    {
+                        my_quantity_input.Remove(item);
+                        bool update = F_SaveData.save_data_input(uiapp, doc, input_block, input_level, input_material, input_id, input_quantity, input_unit, id_file, my_quantity_input, true, user);
+                        if (update) show_data_input(id_file, thong_tin_quantity_input);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
+        //----------------------------------------------------------
+        private void delete_data_input_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (thong_tin_quantity_input.SelectedItem != null)
+                {
+                    data_quantity item = (data_quantity)thong_tin_quantity_input.SelectedItem;
+
+                    my_quantity_input.Remove(item);
+                    bool update = F_SaveData.save_data_input(uiapp, doc, input_block, input_level, input_material, input_id, input_quantity, input_unit, id_file, my_quantity_input, false, user);
+                    if (update) show_data_input(id_file, thong_tin_quantity_input);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
+        //----------------------------------------------------------
+        private void Xem_Du_Lieu_Quantity_input(object sender, RoutedEventArgs e)
+        {
+            Search();
+        }
+        #endregion
     }
 }

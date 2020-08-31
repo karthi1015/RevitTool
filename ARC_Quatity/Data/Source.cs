@@ -30,6 +30,7 @@ namespace ARC_Quatity.Data
 
         public static string path_revit = "Server=18.141.116.111,1433\\SQLEXPRESS;Database=RevitDataBase;User Id=RevitUser; Password = revit@connect";
         public static string path_WEB = "Server=18.141.116.111,1433\\SQLEXPRESS;Database=WEBDataBase;User Id=WebUser; Password = webconnect456";
+        public static string path_Quantity = "Server=18.141.116.111,1433\\SQLEXPRESS;Database=QuatityDataBase;User Id=RevitUser; Password = revit@connect";
 
         public static List<data_descipline> desciplines = new List<data_descipline>()
         {
@@ -76,8 +77,12 @@ namespace ARC_Quatity.Data
             new data_unit(){name = "m", value = 0.3048},
             new data_unit(){name = "100m", value = 0.3048 / 100},
             new data_unit(){name = "md", value = 0.3048},
+            new data_unit(){name = "tấn", value = Math.Pow(0.3048, 3)},
+            new data_unit(){name = "ton", value = Math.Pow(0.3048, 3)},
+            new data_unit(){name = "kg", value = Math.Pow(0.3048, 3) * 1000},
             new data_unit(){name = "cái", value = 1},
-            new data_unit(){name = "bộ", value = 1}
+            new data_unit(){name = "bộ", value = 1},
+            new data_unit(){name = "đầu neo", value = 1}
         };
 
         public static List<data_unit> units_document = new List<data_unit>()

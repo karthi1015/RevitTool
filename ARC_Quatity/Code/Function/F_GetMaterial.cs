@@ -56,7 +56,7 @@ namespace ARC_Quatity.Code.Function
         }
 
         //----------------------------------------------------------
-        public static void Get_All_Material_Of_Element(Document doc, ICollection<ElementId> IdMaterial, ICollection<ElementId> IdMaterialPaint, List<data_paint> materials)
+        public static void Get_All_Material_Of_Element(Document doc, List<data_paint> materials, ICollection<ElementId> IdMaterial, ICollection<ElementId> IdMaterialPaint)
         {
             try
             {

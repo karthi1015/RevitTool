@@ -175,7 +175,7 @@ namespace Tool_CheckUpdateModel.Function
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 //MessageBox.Show(ex.Message);
             }

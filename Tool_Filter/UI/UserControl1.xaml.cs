@@ -10,6 +10,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using Tool_Filter.Code.External;
+using Tool_Filter.Code.Function;
+using Tool_Filter.Data.Binding;
 
 namespace Tool_Filter
 {
@@ -18,43 +21,29 @@ namespace Tool_Filter
     /// </summary>
     public partial class UserControl1 : Window
     {
-
-        FunctionSQL mySQL;
-        FunctionSupoort myFunctionSupport;
-        ListSource mySource;
-
         UIApplication uiapp;
         UIDocument uidoc;
         Document doc;
 
-        ExternalEventClass myExampleDraw;
-        ExternalEvent Draw;
+        E_HighLights my_high_lights;
+        ExternalEvent e_high_lights;
+        E_Hide my_hide;
+        ExternalEvent e_hide;
+        E_Isolate my_isolate;
+        ExternalEvent e_isolate;
+        E_Refresh my_refresh;
+        ExternalEvent e_refresh;
+        E_DuplicateView my_duplicate_view;
+        ExternalEvent e_duplicate_view;
 
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------
-        private void Window_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            if (e.LeftButton == MouseButtonState.Pressed)
-            {
-                DragMove();
-            }
-        }
+        ObservableCollection<data_category> my_category { get; set; }
+        ObservableCollection<data_family> my_family { get; set; }
+        ObservableCollection<data_type> my_type { get; set; }
+        ObservableCollection<data_parameters> my_parameters { get; set; }
+        ObservableCollection<data_parameters_value> my_parameters_value { get; set; }
 
-        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
-        private void closeWindow(object sender, RoutedEventArgs e)
-        {
-            Close();
-        }
-
-        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
-        public ObservableCollection<element_information> my_element_information { get; set; }
-        public ObservableCollection<element_information_category> my_element_information_category { get; set; }
-        public ObservableCollection<element_information_family> my_element_information_family { get; set; }
-        public ObservableCollection<element_information_type> my_element_information_type { get; set; }
-        public ObservableCollection<element_information_parameter> my_element_information_parameter { get; set; }
-        public ObservableCollection<element_information_parameter_value> my_element_information_parameter_value { get; set; }
-        public ObservableCollection<parameter_information> my_parameter_information { get; set; }
-
-        public ObservableCollection<element_information> my_element_information_quickly { get; set; }
+        ObservableCollection<data_element> my_element_quickly { get; set; }
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------
         public string path = "";
         public UserControl1(UIApplication _uiapp)
@@ -65,614 +54,161 @@ namespace Tool_Filter
             uidoc = uiapp.ActiveUIDocument;
             doc = uidoc.Document;
 
-            myExampleDraw = new ExternalEventClass();
-            Draw = ExternalEvent.Create(myExampleDraw);
-
-            mySQL = new FunctionSQL();
-            myFunctionSupport = new FunctionSupoort();
-            mySource = new ListSource();
-
-            var listtotal = mySQL.SQLRead(@"Server=18.141.116.111,1433\SQLEXPRESS;Database=ManageDataBase;User Id=ManageUser; Password = manage@connect789", "Select * from dbo.PathSource", "Query", new List<string>(), new List<string>());
-            path = listtotal.Rows[0][1].ToString();
-            Function_TXT();
-
+            register_external();
             Function_Dau_Vao();
         }
 
         //----------------------------------------------------------
-        public All_Data myAll_Data { get; set; }
-        public void Function_TXT()
-        {
-            try
-            {
-                myAll_Data = myFunctionSupport.Get_Data_All(path);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        //----------------------------------------------------------
-        List<Element> list_element { get; set; }
         public void Function_Dau_Vao()
         {
             try
             {
-                myFunctionSupport.Default_Image(myAll_Data, new List<Image>() { logo_image, show_image, hide_image, isolate_image, select_image, refresh_image, duplicate_image });
+                my_category = new ObservableCollection<data_category>();
+                my_family = new ObservableCollection<data_family>();
+                my_type = new ObservableCollection<data_type>();
+                my_parameters = new ObservableCollection<data_parameters>();
+                my_parameters_value = new ObservableCollection<data_parameters_value>();
 
-                my_element_information = new ObservableCollection<element_information>();
-                my_element_information_category = new ObservableCollection<element_information_category>();
-                my_element_information_family = new ObservableCollection<element_information_family>();
-                my_element_information_type = new ObservableCollection<element_information_type>();
-                my_element_information_parameter = new ObservableCollection<element_information_parameter>();
-                my_element_information_parameter_value = new ObservableCollection<element_information_parameter_value>();
-
-                list_element = new FilteredElementCollector(doc, doc.ActiveView.Id)
-                    .WhereElementIsNotElementType()
-                    .ToList();
-
-                Distint_Category(list_element);
+                F_GetCategory.distint_category(doc, my_category, thong_tin_category, new FilteredElementCollector(doc, doc.ActiveView.Id).WhereElementIsNotElementType().ToList());
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
             }
         }
-
-        public void Visible_List_View()
+        //----------------------------------------------------------
+        private bool Filter(object item)
         {
-
-            try
+            string text = "";
+            if (string.IsNullOrEmpty(search.Text))
+                return true;
+            else
             {
-                if (thong_tin_family.Items.Count > 0) column_family.Width = GridLength.Auto;
-                else column_family.Width = new GridLength(0, GridUnitType.Star);
-
-                if (thong_tin_type.Items.Count > 0) column_type.Width = GridLength.Auto;
-                else column_type.Width = new GridLength(0, GridUnitType.Star);
-
-                if (thong_tin_parameter.Items.Count > 0) column_parameter.Width = GridLength.Auto;
-                else column_parameter.Width = new GridLength(0, GridUnitType.Star);
-
-                if (gia_tri_parameter.Items.Count > 0) column_gia_tri_parameter.Width = GridLength.Auto;
-                else column_gia_tri_parameter.Width = new GridLength(0, GridUnitType.Star);
+                if (cate.IsChecked == true) text = (item as data_category).category_name;
+                else if (family.IsChecked == true) text = (item as data_family).family_name;
+                else if (type.IsChecked == true) text = (item as data_type).type_name;
+                else if (para.IsChecked == true) text = (item as data_parameters).parameter_name;
+                else text = (item as data_parameters_value).parameter_value;
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
+            return text.IndexOf(search.Text, StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
         //----------------------------------------------------------
-        public void Distint_Category(List<Element> list_element)
+        void register_external()
         {
-            try
-            {
-                ObservableCollection<element_information> my_element_information = new ObservableCollection<element_information>();
-                foreach (Element element in list_element)
-                {
-                    try
-                    {
-                        my_element_information.Add(new element_information()
-                        {
-                            category_name = element.Category.Name,
-                            element = element
-                        });
-                    }
-                    catch (Exception)
-                    {
+            my_high_lights = new E_HighLights();
+            e_high_lights = ExternalEvent.Create(my_high_lights);
 
-                    }
-                    
-                }
-                my_element_information_category = new ObservableCollection<element_information_category>(my_element_information.GroupBy(x => new
-                {
-                    x.category_name
-                }).Select(y => new element_information_category()
-                {
-                    category_name = y.Key.category_name,
-                    elements = y.Select(z => z.element).ToList(),
+            my_hide = new E_Hide();
+            e_hide = ExternalEvent.Create(my_hide);
 
-                    check = false,
-                    count = y.Select(z => z.element).ToList().Count()
-                }).OrderBy(z => z.category_name));
+            my_isolate = new E_Isolate();
+            e_isolate = ExternalEvent.Create(my_isolate);
 
-                thong_tin_category.ItemsSource = my_element_information_category;
-                Visible_List_View();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
+            my_refresh = new E_Refresh();
+            e_refresh = ExternalEvent.Create(my_refresh);
+
+            my_duplicate_view = new E_DuplicateView();
+            e_duplicate_view = ExternalEvent.Create(my_duplicate_view);
         }
 
+        #region function checkbox
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------
         private void Filter_By_Category(object sender, RoutedEventArgs e)
         {
-            Distint_Family(list_element);
-            Distint_Type(list_element);
-            Distint_Parameter(list_element);
-            Distint_Parameter_Value(list_element);
+            my_family = new ObservableCollection<data_family>();
+            F_GetFamily.distint_family(my_category, thong_tin_category, my_family, thong_tin_family);
+
+            my_type = new ObservableCollection<data_type>();
+            F_GetElementType.distint_type(my_family, thong_tin_family, my_type, thong_tin_type);
+
+            my_parameters = new ObservableCollection<data_parameters>();
+            F_GetParameters.distint_parameters(doc, my_type, thong_tin_type, my_parameters, thong_tin_parameter);
+
+            my_parameters_value = new ObservableCollection<data_parameters_value>();
+            F_GetParametersValue.distint_parameter_values(doc, my_parameters, thong_tin_parameter, my_parameters_value, gia_tri_parameter);
+
             All_Check();
         }
 
-        //----------------------------------------------------------
-        public void Distint_Family(List<Element> list_element)
-        {
-            try
-            {
-                List<string> category_list = my_element_information_category.Where(x => x.check == true).Select(y => y.category_name).ToList();
-                List<string> family_list = my_element_information_family.Where(x => x.check == true).Select(y => y.family_name).ToList();
-                my_element_information_family.Clear();
-
-                ObservableCollection<element_information> my_element_information = new ObservableCollection<element_information>();
-                foreach (Element element in list_element)
-                {
-                    try
-                    {
-                        if (category_list.Contains(element.Category.Name))
-                        {
-                            my_element_information.Add(new element_information()
-                            {
-                                family_name = element.get_Parameter(BuiltInParameter.ELEM_FAMILY_PARAM).AsValueString(),
-                                element = element
-                            });
-                        }
-                    }
-                    catch (Exception)
-                    {
-
-                    }
-
-                }
-                new ObservableCollection<element_information_family>(my_element_information
-                    .GroupBy(x => new
-                    {
-                        x.family_name
-                    }).Select(y => new element_information_family()
-                    {
-                        family_name = y.Key.family_name,
-                        elements = y.Select(z => z.element).ToList(),
-
-                        check = false,
-                        count = y.Select(z => z.element).ToList().Count()
-                    }).OrderBy(z => z.family_name)).ToList().ForEach(i => my_element_information_family.Add(i));
-
-                my_element_information_family.Where(x => family_list.Contains(x.family_name)).ToList().ForEach(y => y.check = true);
-
-                thong_tin_family.ItemsSource = my_element_information_family;
-                Visible_List_View();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
+        //---------------------------------------------------------
         private void Filter_By_Family(object sender, RoutedEventArgs e)
         {
-            Distint_Type(list_element);
-            Distint_Parameter(list_element);
-            Distint_Parameter_Value(list_element);
+            my_type = new ObservableCollection<data_type>();
+            F_GetElementType.distint_type(my_family, thong_tin_family, my_type, thong_tin_type);
+
+            my_parameters = new ObservableCollection<data_parameters>();
+            F_GetParameters.distint_parameters(doc, my_type, thong_tin_type, my_parameters, thong_tin_parameter);
+
+            my_parameters_value = new ObservableCollection<data_parameters_value>();
+            F_GetParametersValue.distint_parameter_values(doc, my_parameters, thong_tin_parameter, my_parameters_value, gia_tri_parameter);
+
             All_Check();
         }
 
-        //----------------------------------------------------------
-        public void Distint_Type(List<Element> list_element)
-        {
-            try
-            {
-                List<string> category_list = my_element_information_category.Where(x => x.check == true).Select(y => y.category_name).ToList();
-                List<string> family_list = my_element_information_family.Where(x => x.check == true).Select(y => y.family_name).ToList();
-                List<string> type_list = my_element_information_type.Where(x => x.check == true).Select(y => y.type_name).ToList();
-                my_element_information_type.Clear();
 
-                ObservableCollection<element_information> my_element_information = new ObservableCollection<element_information>();
-                foreach (Element element in list_element)
-                {
-                    try
-                    {
-                        if (category_list.Contains(element.Category.Name) && family_list.Contains(element.get_Parameter(BuiltInParameter.ELEM_FAMILY_PARAM).AsValueString()))
-                        {
-                            my_element_information.Add(new element_information()
-                            {
-                                type_name = element.get_Parameter(BuiltInParameter.ELEM_TYPE_PARAM).AsValueString(),
-                                element = element
-                            });
-                        }
-                    }
-                    catch (Exception)
-                    {
 
-                    }
-
-                }
-
-                new ObservableCollection<element_information_type>(my_element_information
-                    .GroupBy(x => new
-                    {
-                        x.type_name
-                    }).Select(y => new element_information_type()
-                    {
-                        type_name = y.Key.type_name,
-                        elements = y.Select(z => z.element).ToList(),
-
-                        check = false,
-                        count = y.Select(z => z.element).ToList().Count()
-                    }).OrderBy(z => z.type_name)).ToList().ForEach(i => my_element_information_type.Add(i));
-
-                my_element_information_type.Where(x => type_list.Contains(x.type_name)).ToList().ForEach(y => y.check = true);
-
-                thong_tin_type.ItemsSource = my_element_information_type;
-                Visible_List_View();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
+        //---------------------------------------------------------
         private void Filter_Type(object sender, RoutedEventArgs e)
         {
-            Distint_Parameter(list_element);
-            Distint_Parameter_Value(list_element);
+            my_parameters = new ObservableCollection<data_parameters>();
+            F_GetParameters.distint_parameters(doc, my_type, thong_tin_type, my_parameters, thong_tin_parameter);
+
+            my_parameters_value = new ObservableCollection<data_parameters_value>();
+            F_GetParametersValue.distint_parameter_values(doc, my_parameters, thong_tin_parameter, my_parameters_value, gia_tri_parameter);
+
             All_Check();
         }
 
-        //----------------------------------------------------------
-        public void Distint_Parameter(List<Element> list_element)
-        {
-            try
-            {
-                List<string> category_list = my_element_information_category.Where(x => x.check == true).Select(y => y.category_name).ToList();
-                List<string> family_list = my_element_information_family.Where(x => x.check == true).Select(y => y.family_name).ToList();
-                List<string> type_list = my_element_information_type.Where(x => x.check == true).Select(y => y.type_name).ToList();
-                List<string> parameter_list = my_element_information_parameter.Where(x => x.check == true).Select(y => y.parameter_name).ToList();
-                my_element_information_parameter.Clear();
 
-                ObservableCollection<element_information> my_element_information = new ObservableCollection<element_information>();
-                foreach (Element element in list_element)
-                {
-                    try
-                    {
-                        if (category_list.Contains(element.Category.Name) && family_list.Contains(element.get_Parameter(BuiltInParameter.ELEM_FAMILY_PARAM).AsValueString()) && type_list.Contains(element.get_Parameter(BuiltInParameter.ELEM_TYPE_PARAM).AsValueString()))
-                        {
-                            List<parameter_information> parameter_Information = new List<parameter_information>();
-                            foreach (Parameter para in element.Parameters)
-                            {
-                                parameter_Information.Add(new parameter_information()
-                                {
-                                    parameter = para,
 
-                                    parameter_name = para.Definition.Name,
-                                    value = myFunctionSupport.Get_Parameter_Information(para, doc)
-                                });
-                            }
-
-                            ElementType type = doc.GetElement(element.get_Parameter(BuiltInParameter.ELEM_TYPE_PARAM).AsElementId()) as ElementType;
-                            List<parameter_information> parameter_Information_type = new List<parameter_information>();
-                            foreach (Parameter para in type.Parameters)
-                            {
-                                if (para.Definition.ParameterGroup != BuiltInParameterGroup.PG_MATERIALS)
-                                {
-                                    parameter_Information_type.Add(new parameter_information()
-                                    {
-                                        parameter = para,
-
-                                        parameter_name = para.Definition.Name,
-                                        value = myFunctionSupport.Get_Parameter_Information(para, doc)
-                                    });
-                                }
-                            }
-
-                            ObservableCollection<material_data> materials = new ObservableCollection<material_data>();
-
-                            var elements = new FilteredElementCollector(doc).OfClass(typeof(Material)).ToList();
-                            materials.Add(new material_data()
-                            {
-                                material_name = "<By Category>",
-                                material = null
-                            });
-                            foreach (Material material in elements)
-                            {
-                                materials.Add(new material_data()
-                                {
-                                    material_name = material.Name,
-                                    material = material
-                                });
-                            }
-
-                            var TypeOftype = type.GetType();
-                            if (myAll_Data.list_system_name_data.Contains(TypeOftype.Name))
-                            {
-
-                                CompoundStructure compound = null;
-                                if (TypeOftype.Name == myAll_Data.list_system_name_data[0])
-                                {
-                                    var wall = type as WallType;
-                                    compound = wall.GetCompoundStructure();
-                                }
-                                if (TypeOftype.Name == myAll_Data.list_system_name_data[1])
-                                {
-                                    var wall = type as FloorType;
-                                    compound = wall.GetCompoundStructure();
-                                }
-                                if (TypeOftype.Name == myAll_Data.list_system_name_data[2])
-                                {
-                                    var wall = type as RoofType;
-                                    compound = wall.GetCompoundStructure();
-                                }
-                                if (TypeOftype.Name == myAll_Data.list_system_name_data[3])
-                                {
-                                    var wall = type as CeilingType;
-                                    compound = wall.GetCompoundStructure();
-                                }
-
-                                IList<CompoundStructureLayer> getlayer = compound.GetLayers();
-                                foreach (var layer in getlayer)
-                                {
-                                    string ten = "<By Category>";
-                                    string ma = "";
-                                    if (layer.MaterialId.IntegerValue != -1)
-                                    {
-                                        ten = doc.GetElement(layer.MaterialId).Name;
-                                        ma = myFunctionSupport.Check_Para_And_Get_Para(doc.GetElement(layer.MaterialId) as Material, myAll_Data.list_material_para_data[0].material_para_guid, myAll_Data.list_material_para_data[0].material_para_name);
-                                    }
-                                    if (parameter_Information_type.Any(x => x.value == ten || x.value == ma) == false)
-                                    {
-                                        parameter_Information_type.Add(new parameter_information()
-                                        {
-                                            parameter_name = "Structural Material",
-                                            value = ten
-                                        });
-                                        parameter_Information_type.Add(new parameter_information()
-                                        {
-                                            parameter_name = "Structural Material",
-                                            value = ma
-                                        });
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                foreach (Parameter para in type.Parameters)
-                                {
-                                    if (para.Definition.ParameterGroup == BuiltInParameterGroup.PG_MATERIALS)
-                                    {
-                                        string ten = "<By Category>";
-                                        string ma = "";
-                                        if (para.AsElementId().IntegerValue != -1)
-                                        {
-                                            ten = doc.GetElement(para.AsElementId()).Name;
-                                            ma = myFunctionSupport.Check_Para_And_Get_Para(doc.GetElement(para.AsElementId()) as Material, myAll_Data.list_material_para_data[0].material_para_guid, myAll_Data.list_material_para_data[0].material_para_name);
-                                        }
-                                        if (parameter_Information_type.Any(x => x.value == ten || x.value == ma) == false)
-                                        {
-                                            parameter_Information_type.Add(new parameter_information()
-                                            {
-                                                parameter_name = "Structural Material",
-                                                value = ten
-                                            });
-                                            parameter_Information_type.Add(new parameter_information()
-                                            {
-                                                parameter_name = "Structural Material",
-                                                value = ma
-                                            });
-                                        }
-                                    }
-                                }
-                            }
-
-                            my_element_information.Add(new element_information()
-                            {
-                                parameters_type = parameter_Information_type,
-                                parameters = parameter_Information,
-                                element = element
-                            });
-                        }
-                    }
-                    catch (Exception)
-                    {
-
-                    }
-
-                }
-
-                ObservableCollection<parameter_information> support = new ObservableCollection<parameter_information>();
-                var data = new List<element_information>(my_element_information.ToList());
-
-                data.ForEach(y => y.parameters.ForEach(yy => support.Add(new parameter_information()
-                {
-                    parameter_name = yy.parameter_name,
-                    value = yy.value,
-                    element = y.element
-                })));
-                data.ForEach(y => y.parameters_type.ForEach(yy => support.Add(new parameter_information()
-                {
-                    parameter_name = yy.parameter_name,
-                    value = yy.value,
-                    element = y.element
-                })));
-
-                support.GroupBy(x => new
-                {
-                    x.parameter_name
-                }).Select(y => new element_information_parameter()
-                {
-                    parameter_name = y.Key.parameter_name,
-                    elements = y.Select(z => z.element).ToList(),
-
-                    check = false,
-                    count = y.Select(z => z.element).ToList().Count()
-                }).OrderBy(z => z.parameter_name).ToList().ForEach(i => my_element_information_parameter.Add(i));
-
-                my_element_information_parameter.Where(x => parameter_list.Contains(x.parameter_name)).ToList().ForEach(y => y.check = true);
-
-                thong_tin_parameter.ItemsSource = my_element_information_parameter;
-                Visible_List_View();
-
-                my_parameter_information = new ObservableCollection<parameter_information>(support.Select(y => new parameter_information()
-                {
-                    parameter_name = y.parameter_name,
-                    parameter_value = y.value,
-                    element = y.element
-                }));
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
+        //---------------------------------------------------------
         private void Filter_Parameter(object sender, RoutedEventArgs e)
         {
-            Distint_Parameter_Value(list_element);
+            my_parameters_value = new ObservableCollection<data_parameters_value>();
+            F_GetParametersValue.distint_parameter_values(doc, my_parameters, thong_tin_parameter, my_parameters_value, gia_tri_parameter);
+
             All_Check();
         }
 
-        //----------------------------------------------------------
-        public void Distint_Parameter_Value(List<Element> list_element)
+        //---------------------------------------------------------
+        private void Filter_Value(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                List<string> category_list = my_element_information_category.Where(x => x.check == true).Select(y => y.category_name).ToList();
-                List<string> family_list = my_element_information_family.Where(x => x.check == true).Select(y => y.family_name).ToList();
-                List<string> type_list = my_element_information_type.Where(x => x.check == true).Select(y => y.type_name).ToList();
-                List<string> parameter_list = my_element_information_parameter.Where(x => x.check == true).Select(y => y.parameter_name).ToList();
-                List<string> value_list = my_element_information_parameter_value.Where(x => x.check == true).Select(y => y.parameter_value).ToList();
-
-                my_element_information_parameter_value.Clear();
-
-                my_parameter_information.Where(i => parameter_list.Contains(i.parameter_name))
-                .GroupBy(x => new
-                {
-                    x.parameter_value
-                }).Select(y => new element_information_parameter_value()
-                {
-                    parameter_value = y.Key.parameter_value,
-                    elements = y.Select(z => z.element).ToList(),
-
-                    check = false,
-                    count = y.Select(z => z.element).ToList().Count()
-                }).OrderBy(z => z.parameter_value).ToList().ForEach(i => my_element_information_parameter_value.Add(i));
-
-                my_element_information_parameter_value.Where(x => value_list.Contains(x.parameter_value)).ToList().ForEach(y => y.check = true);
-
-                gia_tri_parameter.ItemsSource = my_element_information_parameter_value;
-                Visible_List_View();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
+            All_Check();
         }
+        #endregion
 
+        #region control
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------
-        private void Custom_Select(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                Selection selection = uidoc.Selection;
-                var element_list = selection.GetElementIds().Select(x => doc.GetElement(x)).ToList();
-                my_element_information = new ObservableCollection<element_information>();
-                my_element_information_category = new ObservableCollection<element_information_category>();
-                my_element_information_family = new ObservableCollection<element_information_family>();
-                my_element_information_type = new ObservableCollection<element_information_type>();
-                my_element_information_parameter = new ObservableCollection<element_information_parameter>();
-                my_element_information_parameter_value = new ObservableCollection<element_information_parameter_value>();
-                Distint_Category(element_list);
-                Distint_Family(element_list);
-                Distint_Type(element_list);
-                Distint_Parameter(element_list);
-                Distint_Parameter_Value(element_list);
-                All_Check();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
-        private void Refesh(object sender, RoutedEventArgs e)
-        {
-
-            try
-            {
-                my_element_information = new ObservableCollection<element_information>();
-                my_element_information_category = new ObservableCollection<element_information_category>();
-                my_element_information_family = new ObservableCollection<element_information_family>();
-                my_element_information_type = new ObservableCollection<element_information_type>();
-                my_element_information_parameter = new ObservableCollection<element_information_parameter>();
-                my_element_information_parameter_value = new ObservableCollection<element_information_parameter_value>();
-
-                Distint_Category(list_element);
-                Distint_Family(list_element);
-                Distint_Type(list_element);
-                Distint_Parameter(list_element);
-                Distint_Parameter_Value(list_element);
-                All_Check();
-
-                Data_for_ExtenalEvent();
-                myExampleDraw.command = "Reset View";
-                Draw.Raise();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
-        public List<ElementId> ids { get; set; }
+        List<ElementId> ids = new List<ElementId>();
         private void Hight_Lights_Filter(object sender, RoutedEventArgs e)
         {
             try
             {
                 ids = new List<ElementId>();
-                if (!string.IsNullOrEmpty(parameter_name.Text) && !string.IsNullOrEmpty(parameter_value.Text))
+                if (my_parameters_value.Where(x => x.check == true).ToList().Count() > 0)
                 {
-                    Parameter_Quickly_Filter();
-                    foreach (element_information information in my_element_information_quickly)
-                    {
-                        try
-                        {
-                            information.parameters.Where(x => x.parameter_name == parameter_name.Text && x.value == parameter_value.Text).ToList().ForEach(y => ids.Add(y.element.Id));
-                            information.parameters_type.Where(x => x.parameter_name == parameter_name.Text && x.value == parameter_value.Text).ToList().ForEach(y => ids.Add(y.element.Id));
-                        }
-                        catch (Exception) { }
-                    }
+                    my_parameters_value.Where(x => x.check == true).Select(y => y.elements).ToList().ForEach(z => z.ForEach(i => ids.Add(i.Id)));
                 }
-                else
+                else if (my_parameters.Where(x => x.check == true).ToList().Count() > 0)
                 {
-                    if (my_element_information_parameter_value.Where(x => x.check == true).Select(y => y.elements).ToList().Count() > 0)
-                    {
-                        my_element_information_parameter_value.Where(x => x.check == true).Select(y => y.elements).ToList().ForEach(z => z.ForEach(i => ids.Add(i.Id)));
-                    }
-                    else if (my_element_information_parameter.Where(x => x.check == true).Select(y => y.elements).ToList().Count() > 0)
-                    {
-                        my_element_information_parameter.Where(x => x.check == true).Select(y => y.elements).ToList().ForEach(z => z.ForEach(i => ids.Add(i.Id)));
-                    }
-                    else if (my_element_information_type.Where(x => x.check == true).Select(y => y.elements).ToList().Count() > 0)
-                    {
-                        my_element_information_type.Where(x => x.check == true).Select(y => y.elements).ToList().ForEach(z => z.ForEach(i => ids.Add(i.Id)));
-                    }
-                    else if (my_element_information_family.Where(x => x.check == true).Select(y => y.elements).ToList().Count() > 0)
-                    {
-                        my_element_information_family.Where(x => x.check == true).Select(y => y.elements).ToList().ForEach(z => z.ForEach(i => ids.Add(i.Id)));
-                    }
-                    else if (my_element_information_category.Where(x => x.check == true).Select(y => y.elements).ToList().Count() > 0)
-                    {
-                        my_element_information_category.Where(x => x.check == true).Select(y => y.elements).ToList().ForEach(z => z.ForEach(i => ids.Add(i.Id)));
-                    }
+                    my_parameters.Where(x => x.check == true).Select(y => y.elements).ToList().ForEach(z => z.ForEach(i => ids.Add(i.Id)));
+                }
+                else if (my_type.Where(x => x.check == true).ToList().Count() > 0)
+                {
+                    my_type.Where(x => x.check == true).Select(y => y.elements).ToList().ForEach(z => z.ForEach(i => ids.Add(i.Id)));
+                }
+                else if (my_family.Where(x => x.check == true).ToList().Count() > 0)
+                {
+                    my_family.Where(x => x.check == true).Select(y => y.elements).ToList().ForEach(z => z.ForEach(i => ids.Add(i.Id)));
+                }
+                else if (my_category.Where(x => x.check == true).ToList().Count() > 0)
+                {
+                    my_category.Where(x => x.check == true).Select(y => y.elements).ToList().ForEach(z => z.ForEach(i => ids.Add(i.Id)));
                 }
 
-                Data_for_ExtenalEvent();
-                myExampleDraw.command = "Hight Lights";
-                Draw.Raise();
+                my_high_lights.ids = ids;
+                e_high_lights.Raise();
             }
             catch (Exception ex)
             {
@@ -681,195 +217,14 @@ namespace Tool_Filter
         }
 
         //----------------------------------------------------------
-        public void Parameter_Quickly_Filter()
-        {
-            try
-            {
-                foreach (Element element in list_element)
-                {
-                    try
-                    {
-                        List<parameter_information> parameter_Information = new List<parameter_information>();
-                        foreach (Parameter para in element.Parameters)
-                        {
-                            parameter_Information.Add(new parameter_information()
-                            {
-                                parameter = para,
-
-                                parameter_name = para.Definition.Name,
-                                value = myFunctionSupport.Get_Parameter_Information(para, doc)
-                            });
-                        }
-
-                        ElementType type = doc.GetElement(element.get_Parameter(BuiltInParameter.ELEM_TYPE_PARAM).AsElementId()) as ElementType;
-                        List<parameter_information> parameter_Information_type = new List<parameter_information>();
-                        foreach (Parameter para in type.Parameters)
-                        {
-                            if (para.Definition.ParameterGroup != BuiltInParameterGroup.PG_MATERIALS)
-                            {
-                                parameter_Information_type.Add(new parameter_information()
-                                {
-                                    parameter = para,
-
-                                    parameter_name = para.Definition.Name,
-                                    value = myFunctionSupport.Get_Parameter_Information(para, doc)
-                                });
-                            }
-                        }
-
-                        ObservableCollection<material_data> materials = new ObservableCollection<material_data>();
-
-                        var elements = new FilteredElementCollector(doc).OfClass(typeof(Material)).ToList();
-                        materials.Add(new material_data()
-                        {
-                            material_name = "<By Category>",
-                            material = null
-                        });
-                        foreach (Material material in elements)
-                        {
-                            materials.Add(new material_data()
-                            {
-                                material_name = material.Name,
-                                material = material
-                            });
-                        }
-
-                        var TypeOftype = type.GetType();
-                        if (myAll_Data.list_system_name_data.Contains(TypeOftype.Name))
-                        {
-
-                            CompoundStructure compound = null;
-                            if (TypeOftype.Name == myAll_Data.list_system_name_data[0])
-                            {
-                                var wall = type as WallType;
-                                compound = wall.GetCompoundStructure();
-                            }
-                            if (TypeOftype.Name == myAll_Data.list_system_name_data[1])
-                            {
-                                var wall = type as FloorType;
-                                compound = wall.GetCompoundStructure();
-                            }
-                            if (TypeOftype.Name == myAll_Data.list_system_name_data[2])
-                            {
-                                var wall = type as RoofType;
-                                compound = wall.GetCompoundStructure();
-                            }
-                            if (TypeOftype.Name == myAll_Data.list_system_name_data[3])
-                            {
-                                var wall = type as CeilingType;
-                                compound = wall.GetCompoundStructure();
-                            }
-
-                            IList<CompoundStructureLayer> getlayer = compound.GetLayers();
-                            foreach (var layer in getlayer)
-                            {
-                                string ten = "<By Category>";
-                                string ma = "";
-                                if (layer.MaterialId.IntegerValue != -1)
-                                {
-                                    ten = doc.GetElement(layer.MaterialId).Name;
-                                    ma = myFunctionSupport.Check_Para_And_Get_Para(doc.GetElement(layer.MaterialId) as Material, myAll_Data.list_material_para_data[0].material_para_guid, myAll_Data.list_material_para_data[0].material_para_name);
-                                }
-                                if (parameter_Information_type.Any(x => x.value == ten || x.value == ma) == false)
-                                {
-                                    parameter_Information_type.Add(new parameter_information()
-                                    {
-                                        parameter_name = "Structural Material",
-                                        value = ten
-                                    });
-                                    parameter_Information_type.Add(new parameter_information()
-                                    {
-                                        parameter_name = "Structural Material",
-                                        value = ma
-                                    });
-                                }
-                            }
-                        }
-                        else
-                        {
-                            foreach (Parameter para in type.Parameters)
-                            {
-                                if (para.Definition.ParameterGroup == BuiltInParameterGroup.PG_MATERIALS)
-                                {
-                                    string ten = "<By Category>";
-                                    string ma = "";
-                                    if (para.AsElementId().IntegerValue != -1)
-                                    {
-                                        ten = doc.GetElement(para.AsElementId()).Name;
-                                        ma = myFunctionSupport.Check_Para_And_Get_Para(doc.GetElement(para.AsElementId()) as Material, myAll_Data.list_material_para_data[0].material_para_guid, myAll_Data.list_material_para_data[0].material_para_name);
-                                    }
-                                    if (parameter_Information_type.Any(x => x.value == ten || x.value == ma) == false)
-                                    {
-                                        parameter_Information_type.Add(new parameter_information()
-                                        {
-                                            parameter_name = "Structural Material",
-                                            value = ten
-                                        });
-                                        parameter_Information_type.Add(new parameter_information()
-                                        {
-                                            parameter_name = "Structural Material",
-                                            value = ma
-                                        });
-                                    }
-                                }
-                            }
-                        }
-
-                        my_element_information_quickly.Add(new element_information()
-                        {
-                            parameters_type = parameter_Information_type,
-                            parameters = parameter_Information,
-                            element = element
-                        });
-                    }
-                    catch (Exception)
-                    {
-
-                    }
-                }
-            }
-            catch (Exception)
-            {
-
-            }
-        }
-
-        //----------------------------------------------------------
-        public void Data_for_ExtenalEvent()
-        {
-            try
-            {
-                myExampleDraw.control = control;
-                myExampleDraw.ids = ids;
-                myExampleDraw.view_name = view_name;
-                myExampleDraw.thong_tin_category = thong_tin_category;
-                myExampleDraw.thong_tin_family = thong_tin_family;
-                myExampleDraw.thong_tin_type = thong_tin_type;
-                myExampleDraw.thong_tin_parameter = thong_tin_parameter;
-                myExampleDraw.gia_tri_parameter = gia_tri_parameter;
-
-                myExampleDraw.my_element_information = my_element_information;
-                myExampleDraw.my_element_information_category = my_element_information_category;
-                myExampleDraw.my_element_information_family = my_element_information_family;
-                myExampleDraw.my_element_information_type = my_element_information_type;
-                myExampleDraw.my_element_information_parameter = my_element_information_parameter;
-                myExampleDraw.my_element_information_parameter_value = my_element_information_parameter_value;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        public string control { get; set; }
+        bool state = false;
         private void Hide(object sender, RoutedEventArgs e)
         {
             try
             {
-                Data_for_ExtenalEvent();
-                myExampleDraw.command = "Hide";
-                Draw.Raise();
-                control = "Hide";
+                my_hide.ids = ids;
+                e_hide.Raise();
+                state = true;
             }
             catch (Exception ex)
             {
@@ -877,14 +232,13 @@ namespace Tool_Filter
             }
         }
 
+        //----------------------------------------------------------
         private void Hide_Isolate(object sender, RoutedEventArgs e)
         {
             try
             {
-                Data_for_ExtenalEvent();
-                myExampleDraw.command = "HideIsolate";
-                Draw.Raise();
-                control = "HideIsolate";
+                my_isolate.ids = ids;
+                e_isolate.Raise();
             }
             catch (Exception ex)
             {
@@ -892,23 +246,124 @@ namespace Tool_Filter
             }
         }
 
+        //----------------------------------------------------------
         private void Duplicate_View(object sender, RoutedEventArgs e)
         {
             try
             {
-                Data_for_ExtenalEvent();
-                myExampleDraw.command = "Duplicate View";
-                Draw.Raise();
+                if (!string.IsNullOrEmpty(view_name.Text))
+                {
+                    my_duplicate_view.ids = ids;
+                    my_duplicate_view.state = state;
+                    my_duplicate_view.view_name = view_name;
+                    e_duplicate_view.Raise();
+                }
+                else
+                {
+                    MessageBox.Show("The view name not null or empty.", "ERROR", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
             }
         }
+        #endregion
 
+        #region check all
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------
-        private void Filter_Value(object sender, RoutedEventArgs e)
+        private void Check_All_Value(object sender, RoutedEventArgs e)
         {
+            try
+            {
+                if (check_all_value.IsChecked == true) my_parameters_value.ToList().ForEach(y => y.check = true); else my_parameters_value.ToList().ForEach(y => y.check = false);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            All_Check();
+        }
+
+        //----------------------------------------------------------
+        private void Check_All_parameter(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (check_all_parameter.IsChecked == true) my_parameters.ToList().ForEach(y => y.check = true); else my_parameters.ToList().ForEach(y => y.check = false);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            my_parameters_value = new ObservableCollection<data_parameters_value>();
+            F_GetParametersValue.distint_parameter_values(doc, my_parameters, thong_tin_parameter, my_parameters_value, gia_tri_parameter);
+            All_Check();
+        }
+
+        //----------------------------------------------------------
+        private void Check_All_type(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (check_all_type.IsChecked == true) my_type.ToList().ForEach(y => y.check = true); else my_type.ToList().ForEach(y => y.check = false);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            my_parameters = new ObservableCollection<data_parameters>();
+            F_GetParameters.distint_parameters(doc, my_type, thong_tin_type, my_parameters, thong_tin_parameter);
+
+            my_parameters_value = new ObservableCollection<data_parameters_value>();
+            F_GetParametersValue.distint_parameter_values(doc, my_parameters, thong_tin_parameter, my_parameters_value, gia_tri_parameter);
+            All_Check();
+        }
+
+        //----------------------------------------------------------
+        private void Check_All_family(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (check_all_family.IsChecked == true) my_family.ToList().ForEach(y => y.check = true); else my_family.ToList().ForEach(y => y.check = false);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            my_type = new ObservableCollection<data_type>();
+            F_GetElementType.distint_type(my_family, thong_tin_family, my_type, thong_tin_type);
+
+            my_parameters = new ObservableCollection<data_parameters>();
+            F_GetParameters.distint_parameters(doc, my_type, thong_tin_type, my_parameters, thong_tin_parameter);
+
+            my_parameters_value = new ObservableCollection<data_parameters_value>();
+            F_GetParametersValue.distint_parameter_values(doc, my_parameters, thong_tin_parameter, my_parameters_value, gia_tri_parameter);
+            All_Check();
+        }
+
+        //----------------------------------------------------------
+        private void Check_All_category(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (check_all_category.IsChecked == true) my_category.ToList().ForEach(y => y.check = true); else my_category.ToList().ForEach(y => y.check = false);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            my_family = new ObservableCollection<data_family>();
+            F_GetFamily.distint_family(my_category, thong_tin_category, my_family, thong_tin_family);
+
+            my_type = new ObservableCollection<data_type>();
+            F_GetElementType.distint_type(my_family, thong_tin_family, my_type, thong_tin_type);
+
+            my_parameters = new ObservableCollection<data_parameters>();
+            F_GetParameters.distint_parameters(doc, my_type, thong_tin_type, my_parameters, thong_tin_parameter);
+
+            my_parameters_value = new ObservableCollection<data_parameters_value>();
+            F_GetParametersValue.distint_parameter_values(doc, my_parameters, thong_tin_parameter, my_parameters_value, gia_tri_parameter);
             All_Check();
         }
 
@@ -917,11 +372,22 @@ namespace Tool_Filter
         {
             try
             {
-                if (my_element_information_category.Count() > 0 && my_element_information_category.Any(x => x.check != true) == false) check_all_category.IsChecked = true; else check_all_category.IsChecked = false;
-                if (my_element_information_family.Count() > 0 && my_element_information_family.Any(x => x.check != true) == false) check_all_family.IsChecked = true; else check_all_family.IsChecked = false;
-                if (my_element_information_type.Count() > 0 && my_element_information_type.Any(x => x.check != true) == false) check_all_type.IsChecked = true; else check_all_type.IsChecked = false;
-                if (my_element_information_parameter.Count() > 0 && my_element_information_parameter.Any(x => x.check != true) == false) check_all_parameter.IsChecked = true; else check_all_parameter.IsChecked = false;
-                if (my_element_information_parameter_value.Count() > 0 && my_element_information_parameter_value.Any(x => x.check != true) == false) check_all_value.IsChecked = true; else check_all_value.IsChecked = false;
+                ListCollectionView view_cate = CollectionViewSource.GetDefaultView(thong_tin_category.ItemsSource) as ListCollectionView;
+                ListCollectionView view_family = CollectionViewSource.GetDefaultView(thong_tin_family.ItemsSource) as ListCollectionView;
+                ListCollectionView view_type = CollectionViewSource.GetDefaultView(thong_tin_type.ItemsSource) as ListCollectionView;
+                ListCollectionView view_para = CollectionViewSource.GetDefaultView(thong_tin_parameter.ItemsSource) as ListCollectionView;
+                ListCollectionView view_value = CollectionViewSource.GetDefaultView(gia_tri_parameter.ItemsSource) as ListCollectionView;
+                view_cate.Filter = Filter;
+                view_family.Filter = Filter;
+                view_type.Filter = Filter;
+                view_para.Filter = Filter;
+                view_value.Filter = Filter;
+
+                if (my_category.Count() > 0 && my_category.Any(x => x.check != true) == false) check_all_category.IsChecked = true; else check_all_category.IsChecked = false;
+                if (my_family.Count() > 0 && my_family.Any(x => x.check != true) == false) check_all_family.IsChecked = true; else check_all_family.IsChecked = false;
+                if (my_type.Count() > 0 && my_type.Any(x => x.check != true) == false) check_all_type.IsChecked = true; else check_all_type.IsChecked = false;
+                if (my_parameters.Count() > 0 && my_parameters.Any(x => x.check != true) == false) check_all_parameter.IsChecked = true; else check_all_parameter.IsChecked = false;
+                if (my_parameters_value.Count() > 0 && my_parameters_value.Any(x => x.check != true) == false) check_all_value.IsChecked = true; else check_all_value.IsChecked = false;
 
                 thong_tin_category.Items.Refresh();
                 thong_tin_family.Items.Refresh();
@@ -935,24 +401,28 @@ namespace Tool_Filter
             }
         }
 
+        #endregion
 
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------
-        private void Check_All_Value(object sender, RoutedEventArgs e)
-        {
-            CheckAll_Not_value();
-            Distint_Family(list_element);
-            Distint_Type(list_element);
-            Distint_Parameter(list_element);
-            Distint_Parameter_Value(list_element);
-            All_Check();
-        }
-
-        //----------------------------------------------------------
-        public void CheckAll_Not_value()
+        private void Custom_Select(object sender, RoutedEventArgs e)
         {
             try
             {
-                if (check_all_value.IsChecked == true) my_element_information_parameter_value.ToList().ForEach(y => y.check = true); else my_element_information_parameter_value.ToList().ForEach(y => y.check = false);
+                Selection selection = uidoc.Selection;
+                var element_list = selection.PickObjects(ObjectType.Element).Select(x => doc.GetElement(x)).ToList();
+
+                my_category = new ObservableCollection<data_category>();
+                my_family = new ObservableCollection<data_family>();
+                my_type = new ObservableCollection<data_type>();
+                my_parameters = new ObservableCollection<data_parameters>();
+                my_parameters_value = new ObservableCollection<data_parameters_value>();
+
+                F_GetCategory.distint_category(doc, my_category, thong_tin_category, element_list);
+                F_GetFamily.distint_family(my_category, thong_tin_category, my_family, thong_tin_family);
+                F_GetElementType.distint_type(my_family, thong_tin_family, my_type, thong_tin_type);
+                F_GetParameters.distint_parameters(doc, my_type, thong_tin_type, my_parameters, thong_tin_parameter);
+                F_GetParametersValue.distint_parameter_values(doc, my_parameters, thong_tin_parameter, my_parameters_value, gia_tri_parameter);
+                All_Check();
             }
             catch (Exception ex)
             {
@@ -961,22 +431,24 @@ namespace Tool_Filter
         }
 
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------
-        private void Check_All_parameter(object sender, RoutedEventArgs e)
-        {
-            CheckAll_Not_parameter();
-            Distint_Family(list_element);
-            Distint_Type(list_element);
-            Distint_Parameter(list_element);
-            Distint_Parameter_Value(list_element);
-            All_Check();
-        }
-
-        //----------------------------------------------------------
-        public void CheckAll_Not_parameter()
+        private void Refesh(object sender, RoutedEventArgs e)
         {
             try
             {
-                if (check_all_parameter.IsChecked == true) my_element_information_parameter.ToList().ForEach(y => y.check = true); else my_element_information_parameter.ToList().ForEach(y => y.check = false);
+                my_category = new ObservableCollection<data_category>();
+                my_family = new ObservableCollection<data_family>();
+                my_type = new ObservableCollection<data_type>();
+                my_parameters = new ObservableCollection<data_parameters>();
+                my_parameters_value = new ObservableCollection<data_parameters_value>();
+
+                F_GetCategory.distint_category(doc, my_category, thong_tin_category, new FilteredElementCollector(doc, doc.ActiveView.Id).WhereElementIsNotElementType().ToList());
+                F_GetFamily.distint_family(my_category, thong_tin_category, my_family, thong_tin_family);
+                F_GetElementType.distint_type(my_family, thong_tin_family, my_type, thong_tin_type);
+                F_GetParameters.distint_parameters(doc, my_type, thong_tin_type, my_parameters, thong_tin_parameter);
+                F_GetParametersValue.distint_parameter_values(doc, my_parameters, thong_tin_parameter, my_parameters_value, gia_tri_parameter);
+                All_Check();
+
+                e_refresh.Raise();
             }
             catch (Exception ex)
             {
@@ -985,22 +457,38 @@ namespace Tool_Filter
         }
 
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------
-        private void Check_All_type(object sender, RoutedEventArgs e)
+        private void change_search_by(object sender, RoutedEventArgs e)
         {
-            CheckAll_Not_type();
-            Distint_Family(list_element);
-            Distint_Type(list_element);
-            Distint_Parameter(list_element);
-            Distint_Parameter_Value(list_element);
-            All_Check();
+            if (cate.IsChecked == true) CollectionViewSource.GetDefaultView(thong_tin_category.ItemsSource).Refresh();
+            else if (family.IsChecked == true) CollectionViewSource.GetDefaultView(thong_tin_family.ItemsSource).Refresh();
+            else if (type.IsChecked == true) CollectionViewSource.GetDefaultView(thong_tin_type.ItemsSource).Refresh();
+            else if (para.IsChecked == true) CollectionViewSource.GetDefaultView(thong_tin_parameter.ItemsSource).Refresh();
+            else CollectionViewSource.GetDefaultView(gia_tri_parameter.ItemsSource).Refresh();
         }
 
-        //----------------------------------------------------------
-        public void CheckAll_Not_type()
+        private void search_by_text_change(object sender, TextChangedEventArgs e)
+        {
+            if (cate.IsChecked == true) CollectionViewSource.GetDefaultView(thong_tin_category.ItemsSource).Refresh();
+            else if (family.IsChecked == true) CollectionViewSource.GetDefaultView(thong_tin_family.ItemsSource).Refresh();
+            else if (type.IsChecked == true) CollectionViewSource.GetDefaultView(thong_tin_type.ItemsSource).Refresh();
+            else if (para.IsChecked == true) CollectionViewSource.GetDefaultView(thong_tin_parameter.ItemsSource).Refresh();
+            else CollectionViewSource.GetDefaultView(gia_tri_parameter.ItemsSource).Refresh();
+        }
+
+        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
+        private void quickly_filter_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                if (check_all_type.IsChecked == true) my_element_information_type.ToList().ForEach(y => y.check = true); else my_element_information_type.ToList().ForEach(y => y.check = false);
+                if (!string.IsNullOrEmpty(parameter_name.Text) && !string.IsNullOrEmpty(parameter_value.Text))
+                {
+                    Parameter_Quickly_Filter();
+                    var data = my_element_quickly.Where(x => x.parameter_name == parameter_name.Text && x.parameter_value == parameter_value.Text).ToList();
+                    if (data.Count() > 0) ids = data.First().ids;
+
+                    my_high_lights.ids = ids;
+                    e_high_lights.Raise();
+                }
             }
             catch (Exception ex)
             {
@@ -1008,47 +496,35 @@ namespace Tool_Filter
             }
         }
 
-        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
-        private void Check_All_family(object sender, RoutedEventArgs e)
-        {
-            CheckAll_Not_family();
-            Distint_Family(list_element);
-            Distint_Type(list_element);
-            Distint_Parameter(list_element);
-            Distint_Parameter_Value(list_element);
-            All_Check();
-        }
-
         //----------------------------------------------------------
-        public void CheckAll_Not_family()
+        public void Parameter_Quickly_Filter()
         {
             try
             {
-                if (check_all_family.IsChecked == true) my_element_information_family.ToList().ForEach(y => y.check = true); else my_element_information_family.ToList().ForEach(y => y.check = false);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
+                my_element_quickly = new ObservableCollection<data_element>();
+                List<data_element> my_element = new List<data_element>();
+                foreach (Element element in new FilteredElementCollector(doc, doc.ActiveView.Id).WhereElementIsNotElementType().ToList())
+                {
+                    foreach (Parameter para in element.Parameters)
+                    {
+                        my_element.Add(new data_element()
+                        {
+                            parameter_name = para.Definition.Name,
+                            element = element,
+                            parameter_value = para != null ? Support.Get_Parameter_Information(para, doc) : ""
+                        });
+                    }
+                }
+                my_element.GroupBy(x => new 
+                { 
+                    x.parameter_name, x.parameter_value
+                }).Select(x => new data_element() 
+                { 
+                    parameter_name = x.Key.parameter_name,
+                    parameter_value = x.Key.parameter_value,
 
-        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
-        private void Check_All_category(object sender, RoutedEventArgs e)
-        {
-            CheckAll_Not_category();
-            Distint_Family(list_element);
-            Distint_Type(list_element);
-            Distint_Parameter(list_element);
-            Distint_Parameter_Value(list_element);
-            All_Check();
-        }
-
-        //----------------------------------------------------------
-        public void CheckAll_Not_category()
-        {
-            try
-            {
-                if (check_all_category.IsChecked == true) my_element_information_category.ToList().ForEach(y => y.check = true); else my_element_information_category.ToList().ForEach(y => y.check = false);
+                    ids = x.Select(y => y.element.Id).ToList()
+                }).ToList().ForEach(x => my_element_quickly.Add(x));
             }
             catch (Exception ex)
             {
@@ -1059,7 +535,7 @@ namespace Tool_Filter
 }
 
 
-      
-  
+
+
 
 

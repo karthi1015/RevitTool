@@ -106,7 +106,7 @@
                                 materialDesign:ButtonAssist.CornerRadius="5"
                                 Click="Refresh_View">
                                 <materialDesign:PackIcon 
-                                    Kind="Update" 
+                                    Kind="Cached" 
                                     Width="30" Height="30"
                                     Margin="-10 -20 -10 -10"/>
                             </Button>
@@ -133,7 +133,21 @@
                     Grid.Column="0"
                     Name="thong_tin_clash_parent"
                     Margin="5 20 5 5"
-                    SelectionMode="Single">
+                    SelectionMode="Single"
+                    VerticalAlignment="Top">
+                    <ListView.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem 
+                                Name="delete_parent"
+                                Header="Delete" 
+                                Click="delete_clash_parent_Click"
+                                IsEnabled="False">
+                                <MenuItem.Icon>
+                                    <materialDesign:PackIcon Kind="DeleteOutline" Foreground="{StaticResource PrimaryHueLightBrush}"/>
+                                </MenuItem.Icon>
+                            </MenuItem>
+                        </ContextMenu>
+                    </ListView.ContextMenu>
                     <ListView.View>
                         <GridView>
                             <GridViewColumn 
@@ -189,6 +203,7 @@
                 <ColumnDefinition Width="550"/>
             </Grid.ColumnDefinitions>
             <ListView 
+                VerticalAlignment="Top"
                 Name="thong_tin_clash_child"
                 Margin="5 5 5 45"
                 SelectionMode="Single">
@@ -208,7 +223,8 @@
                                         ItemsSource="{Binding status_child_list}"
                                         SelectedItem="{Binding status_child, Mode=TwoWay}" 
                                         DropDownClosed="Change_Status_Child"
-                                        ItemTemplate ="{StaticResource combo}">
+                                        ItemTemplate ="{StaticResource combo}"
+                                        IsEnabled="{Binding isEnable}">
                                     </ComboBox>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
@@ -240,7 +256,6 @@
                 <ListView.ItemContainerStyle>
                     <Style TargetType="ListViewItem">
                         <EventSetter Event="MouseLeftButtonUp" Handler="Hight_Lights" />
-                        <Setter Property="IsEnabled" Value="{Binding isEnable}"/>
                         <Setter Property="MinHeight" Value="35"/>
                         <Setter Property="Foreground" Value="{Binding color, Mode=TwoWay}"/>
                         <Setter Property="Template">
@@ -337,6 +352,7 @@
                 Grid.Column="1"
                 HorizontalAlignment="Center">
                 <ListView 
+                    VerticalAlignment="Top"
                     Name="hinh_anh_minh_hoa"
                     Margin="5">
                     <ListView.View>

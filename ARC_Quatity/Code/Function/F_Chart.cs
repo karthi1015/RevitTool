@@ -16,8 +16,8 @@ namespace ARC_Quatity.Code.Function
 {
     class F_Chart
     {
-        //----------------------------------------------------------
-        public static void Show_Du_Lieu_Len_Chart(PieChart bieu_do_category, ObservableCollection<data_element_link> my_element_link, object DataContext, UserControl1 userControl1)
+        //bieu_do_category + my_element_link + DataContext + userControl1----------------------------------------------------------
+        public static void Show_Du_Lieu_Len_Chart(PieChart bieu_do_category, object DataContext, UserControl1 userControl1, ObservableCollection<data_element_link> my_element_link)
         {
             try
             {

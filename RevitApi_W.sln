@@ -27,6 +27,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UI_Ribbon", "UI_Ribbon\UI_R
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tool_CheckUpdateModel", "Tool_CheckUpdateModel\Tool_CheckUpdateModel.csproj", "{8CE32278-6E67-4AD0-BE5F-5C6FD26A65DB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ARC_SupportLayout", "ARC_SupportLayout\ARC_SupportLayout.csproj", "{311BD181-2980-49E1-AF8E-3DBB7667BA24}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -131,6 +133,14 @@ Global
 		{8CE32278-6E67-4AD0-BE5F-5C6FD26A65DB}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8CE32278-6E67-4AD0-BE5F-5C6FD26A65DB}.Release|x64.ActiveCfg = Release|Any CPU
 		{8CE32278-6E67-4AD0-BE5F-5C6FD26A65DB}.Release|x64.Build.0 = Release|Any CPU
+		{311BD181-2980-49E1-AF8E-3DBB7667BA24}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{311BD181-2980-49E1-AF8E-3DBB7667BA24}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{311BD181-2980-49E1-AF8E-3DBB7667BA24}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{311BD181-2980-49E1-AF8E-3DBB7667BA24}.Debug|x64.Build.0 = Debug|Any CPU
+		{311BD181-2980-49E1-AF8E-3DBB7667BA24}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{311BD181-2980-49E1-AF8E-3DBB7667BA24}.Release|Any CPU.Build.0 = Release|Any CPU
+		{311BD181-2980-49E1-AF8E-3DBB7667BA24}.Release|x64.ActiveCfg = Release|Any CPU
+		{311BD181-2980-49E1-AF8E-3DBB7667BA24}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

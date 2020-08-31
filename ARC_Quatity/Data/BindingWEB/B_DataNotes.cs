@@ -9,9 +9,12 @@ namespace ARC_Quatity.Data.BindingWEB
     class data_table_note
     {
         public string id { get; set; }
+        public List<string> ids { get; set; }
         public string block { get; set; }
         public string level { get; set; }
         public string ma_cong_tac { get; set; }
         public string notes { get; set; }
+        public bool edited { get; set; }
+        public List<bool> editeds { get; set; }
     }
 }

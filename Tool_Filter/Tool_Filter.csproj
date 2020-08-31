@@ -15,6 +15,8 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
     <TargetFrameworkProfile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -58,6 +60,14 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="MaterialDesignColors, Version=1.2.6.1513, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MaterialDesignColors.1.2.6\lib\net45\MaterialDesignColors.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="MaterialDesignThemes.Wpf, Version=3.1.3.1513, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MaterialDesignThemes.3.1.3\lib\net45\MaterialDesignThemes.Wpf.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="RevitAPI">
       <HintPath>C:\Program Files\Autodesk\Revit 2019\RevitAPI.dll</HintPath>
       <Private>False</Private>
@@ -83,13 +93,26 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Data\ListBinding.cs" />
-    <Compile Include="Data\ListConvert.cs" />
-    <Compile Include="Data\ListSource.cs" />
-    <Compile Include="Data\ListTXT.cs" />
-    <Compile Include="Function\FunctionExternal.cs" />
-    <Compile Include="Function\FunctionSQL.cs" />
-    <Compile Include="Function\FunctionSupoort.cs" />
+    <Compile Include="Code\External\E_Hide.cs" />
+    <Compile Include="Code\External\E_DuplicateView.cs" />
+    <Compile Include="Code\External\E_Refresh.cs" />
+    <Compile Include="Code\External\E_Isolate.cs" />
+    <Compile Include="Code\External\E_HighLights.cs" />
+    <Compile Include="Code\Function\F_GetCategory.cs" />
+    <Compile Include="Code\Function\F_GetElementType.cs" />
+    <Compile Include="Code\Function\F_GetFamily.cs" />
+    <Compile Include="Code\Function\F_GetParameters.cs" />
+    <Compile Include="Code\Function\F_GetParametersValue.cs" />
+    <Compile Include="Data\Binding\B_Category.cs" />
+    <Compile Include="Data\Binding\B_Element.cs" />
+    <Compile Include="Data\Binding\B_ElementType.cs" />
+    <Compile Include="Data\Binding\B_Family.cs" />
+    <Compile Include="Data\Binding\B_ParamatersValue.cs" />
+    <Compile Include="Data\Binding\B_Parameters.cs" />
+    <Compile Include="Data\Convert.cs" />
+    <Compile Include="Data\Source.cs" />
+    <Compile Include="Code\SQL.cs" />
+    <Compile Include="Code\Support.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -111,13 +134,14 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Page Include="StyleTemplate\StyleWPF.xaml">
+    <Page Include="Style\StyleWPF.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -126,9 +150,17 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>
     </PostBuildEvent>
   </PropertyGroup>
+  <Import Project="..\packages\MaterialDesignThemes.3.1.3\build\MaterialDesignThemes.targets" Condition="Exists('..\packages\MaterialDesignThemes.3.1.3\build\MaterialDesignThemes.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\MaterialDesignThemes.3.1.3\build\MaterialDesignThemes.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\MaterialDesignThemes.3.1.3\build\MaterialDesignThemes.targets'))" />
+  </Target>
 </Project>

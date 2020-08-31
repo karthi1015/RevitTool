@@ -1,95 +1,128 @@
 ﻿using Autodesk.Revit.DB;
-using Autodesk.Revit.DB.ExtensibleStorage;
 using Autodesk.Revit.UI;
+using Newtonsoft.Json;
+using SetupTool_MaterialSetup.Code.External;
+using SetupTool_MaterialSetup.Code.Function.FunctionCompany;
+using SetupTool_MaterialSetup.Code.Function.FunctionExcel;
+using SetupTool_MaterialSetup.Code.Function.FunctionProject;
+using SetupTool_MaterialSetup.Code.Function.FunctionTemplate;
+using SetupTool_MaterialSetup.Data.Binding;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Net;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Forms;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using Button = System.Windows.Controls.Button;
-using Color = Autodesk.Revit.DB.Color;
-using Color1 = System.Windows.Media.Color;
-using ComboBox = System.Windows.Controls.ComboBox;
 using MessageBox = System.Windows.MessageBox;
 
 namespace SetupTool_MaterialSetup
 {
-    /// <summary>
-    /// Interaction logic for UserControl1.xaml
-    /// </summary>
     public partial class UserControl1 : Window
     {
-        FunctionSQL mySQL;
-        FunctionSupoort myFunctionSupport;
-        ListSource mySource;
-
+        #region Instance
         UIApplication uiapp;
         UIDocument uidoc;
         Document doc;
+        int version;
+        string user;
+        string project_number;
+        string block;
+        string Class;
 
-        ExternalEventClass myExampleDraw;
-        ExternalEvent Draw;
+        E_Create my_create;
+        ExternalEvent e_create;
+        E_Update my_update;
+        ExternalEvent e_update;
+        E_Delete my_delete;
+        ExternalEvent e_delete;
+        E_CreateByExcel my_create_by_excel;
+        ExternalEvent e_create_by_excel;
+        E_ChangeFactor my_change_factor;
+        ExternalEvent e_change_factor;
 
-        List<Data> myData_fillPattern = new List<Data>();
+        ColorDialog colorDialog;
 
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------
-        private void Window_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            if (e.LeftButton == MouseButtonState.Pressed)
-            {
-                DragMove();
-            }
-        }
-
-        private void closeWindow(object sender, RoutedEventArgs e)
-        {
-            Close();
-        }
+        ObservableCollection<data_material_factor> my_material_factor { get; set; }
+        ObservableCollection<data_material_project> my_material_project { get; set; }
+        ObservableCollection<data_material_company> my_material_company { get; set; }
+        ObservableCollection<data_material_template> my_material_template { get; set; }
+        #endregion
 
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------
-        public string path = "";
         public UserControl1(UIApplication _uiapp)
         {
             InitializeComponent();
             uiapp = _uiapp;
             uidoc = uiapp.ActiveUIDocument;
             doc = uidoc.Document;
+            version = Convert.ToInt32(uiapp.Application.VersionNumber);
 
-            myExampleDraw = new ExternalEventClass();
-            Draw = ExternalEvent.Create(myExampleDraw);
-
-            mySQL = new FunctionSQL();
-            myFunctionSupport = new FunctionSupoort();
-            mySource = new ListSource();
-            var listtotal = mySQL.SQLRead(@"Server=18.141.116.111,1433\SQLEXPRESS;Database=ManageDataBase;User Id=ManageUser; Password = manage@connect789", "Select * from dbo.PathSource", "Query", new List<string>(), new List<string>());
-            path = listtotal.Rows[0][1].ToString();
-            Function_TXT();
+            user = uiapp.Application.Username;
+            string myIP = Dns.GetHostAddresses(Dns.GetHostName()).First(x => x.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork).ToString();
+            string path = Source.pathUserPassword + "\\" + myIP;
+            if (File.Exists(path))
+            {
+                data_information information = JsonConvert.DeserializeObject<data_information>(File.ReadAllText(path));
+                user = information.user_name;
+            }
 
             Function_Dau_Vao();
         }
+        
         //----------------------------------------------------------
-        public void Function_Dau_Vao()
+        private void Function_Dau_Vao()
         {
             try
             {
-                myFunctionSupport.Default_Image(myAll_Data, new List<Image>() { logo_image, cloud_image, excel_image, add_image, modify_image, refresh_image });
+                List<string> file_name = doc.Title.Split('_').ToList();
+                project_number = doc.ProjectInformation.Number;
+                block = doc.ProjectInformation.BuildingName;
+                Class = doc.ProjectInformation.LookupParameter("Class") == null ? "" : doc.ProjectInformation.LookupParameter("Class").AsString();
+                if (string.IsNullOrEmpty(Class)) MessageBox.Show("Share Parameter Class not found", "ERROR", MessageBoxButton.OK, MessageBoxImage.Error);
 
-                GetData_Source_Material();
-                myFunctionSupport.Get_SurfacePatternName_And_CutPatternName(doc, myData_fillPattern, name_cut, name_surface);
-                Show_Infor_Material();
-                Get_Data_Factor();
+                if (file_name.Count() > 3)
+                {
+                    List<string> format = new List<string>();
+                    if (project_number != file_name[0]) format.Add("Project Number");
+
+                    if (block != file_name[1]) format.Add("Block");
+
+                    if (Class != file_name[3]) format.Add("Class");
+
+                    if (format.Count() == 0)
+                    {
+                        my_material_factor = new ObservableCollection<data_material_factor>();
+                        my_material_project = new ObservableCollection<data_material_project>();
+                        my_material_company = new ObservableCollection<data_material_company>();
+                        my_material_template = new ObservableCollection<data_material_template>();
+
+                        register_external();
+                        F_GetUnit.get_unit_company(don_vi);
+                        F_GetPattern.get_pattern(doc, name_cut, name_surface);
+                        Show_Infor_Material();
+                        F_GetFactor.get_material_factor(doc, my_material_factor, thong_tin_he_so_vat_lieu_project);
+
+                        colorDialog = new ColorDialog();
+                        colorDialog.FullOpen = true;
+                    }
+                    else
+                    {
+                        MessageBox.Show(string.Format("Data is incorrect.\nPlease check {0} and try again!", string.Join(",", format)), "ERROR", MessageBoxButton.OK, MessageBoxImage.Error);
+                        this.Close();
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("File name is incorrect. Please check and try again!", "ERROR", MessageBoxButton.OK, MessageBoxImage.Error);
+                    this.Close();
+                } 
             }
             catch (Exception ex)
             {
@@ -98,142 +131,30 @@ namespace SetupTool_MaterialSetup
         }
 
         //----------------------------------------------------------
-        public All_Data myAll_Data { get; set; }
-        public void Function_TXT()
+        void register_external()
         {
-            try
-            {
-                myAll_Data = myFunctionSupport.Get_Data_All(path);
-            }
-            catch (Exception)
-            {
-
-            }
+            my_create = new E_Create();
+            e_create = ExternalEvent.Create(my_create);
+            my_update = new E_Update();
+            e_update = ExternalEvent.Create(my_update);
+            my_delete = new E_Delete();
+            e_delete = ExternalEvent.Create(my_delete);
+            my_create_by_excel = new E_CreateByExcel();
+            e_create_by_excel = ExternalEvent.Create(my_create_by_excel);
+            my_change_factor = new E_ChangeFactor();
+            e_change_factor = ExternalEvent.Create(my_change_factor);
         }
 
-        //----------------------------------------------------------
-        List<Data> myData_donvi = new List<Data>();
-        public void GetData_Source_Material()
+        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
+        #region Material Project
+        //-----------------------------------------------------------
+        private void Show_Infor_Material()
         {
             try
             {
-                List<string> combobox_don_vi = new List<string>();
-                combobox_don_vi.Add("");
-                combobox_don_vi.Add("Default");
-
-                var listtotal = mySQL.SQLRead(myAll_Data.list_path_connect_SQL_data[3], "dbo.spVW_WorkIdDesCription_UserMaterial", mySource.type_Procedure, new List<string>(), new List<string>());
-                int rows = listtotal.Rows.Count;
-                for (var i = 0; i < rows; i ++)
-                {
-                    combobox_don_vi.Add(listtotal.Rows[i][5].ToString());
-                }
-                List<string> UniqueData = combobox_don_vi.Distinct().ToList();
-                foreach (string don_vi in UniqueData)
-                {
-                    myData_donvi.Add(new Data()
-                    {
-                        single_value = don_vi
-                    });
-                }
-                don_vi.ItemsSource = myData_donvi;
-                don_vi.SelectedIndex = 0;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        //----------------------------------------------------------
-        public ObservableCollection<Material_Factor> myMaterial_Project_Factor { get; set; }
-        public void Get_Data_Factor()
-        {
-            try
-            {
-                myMaterial_Project_Factor = new ObservableCollection<Material_Factor>();
-                List<Element> list_material = new FilteredElementCollector(doc).OfClass(typeof(Material)).ToList();
-                ObservableCollection<Material_Project> support = new ObservableCollection<Material_Project>();
-
-                foreach (Material material in list_material)
-                {
-                    support.Add(new Material_Project()
-                    {
-                        material_project = material,
-                        ton = Convert.ToDouble(myFunctionSupport.Check_Para_And_Get_Para(material, myAll_Data.list_material_para_data[2].material_para_guid, myAll_Data.list_material_para_data[2].material_para_name)).ToString(),
-                    });
-                }
-
-                new ObservableCollection<Material_Factor>(support
-                    .GroupBy(x => new
-                    {
-                        x.ton
-                    }).Select(y => new Material_Factor()
-                    {
-                        ton_value = y.Key.ton,
-                        list_vat_lieu = y.Select(z => z.material_project).ToList(),
-                        count = y.Select(z => z.material_project).ToList().Count()
-                    }).OrderBy(z => z.ton_value)).ToList().ForEach(i => myMaterial_Project_Factor.Add(i));
-
-                thong_tin_he_so_vat_lieu_project.ItemsSource = myMaterial_Project_Factor;
-            }
-            catch (Exception)
-            {
-
-            }
-        }
-
-        //----------------------------------------------------------
-        public ObservableCollection<Material_Project> myMaterial_Project { get; set; }
-        public void Show_Infor_Material()
-        {
-            try
-            {
-                myMaterial_Project = new ObservableCollection<Material_Project>();
-                List<Element> list_material = new FilteredElementCollector(doc).OfClass(typeof(Material)).ToList();
-                
-                foreach (Material material in list_material)
-                {
-                    if(myFunctionSupport.Check_Para_And_Get_Para(material, myAll_Data.list_material_para_data[0].material_para_guid, myAll_Data.list_material_para_data[0].material_para_name) == null)
-                    {
-                        myFunctionSupport.SetDataStorage(material, myAll_Data.list_material_para_data[0].material_para_guid, myAll_Data.list_material_para_data[0].material_para_name, "");
-                    }
-                    if (myFunctionSupport.Check_Para_And_Get_Para(material, myAll_Data.list_material_para_data[1].material_para_guid, myAll_Data.list_material_para_data[1].material_para_name) == null)
-                    {
-                        myFunctionSupport.SetDataStorage(material, myAll_Data.list_material_para_data[1].material_para_guid, myAll_Data.list_material_para_data[1].material_para_name, "");
-                    }
-                    if (myFunctionSupport.Check_Para_And_Get_Para(material, myAll_Data.list_material_para_data[2].material_para_guid, myAll_Data.list_material_para_data[2].material_para_name) == null ||
-                        myFunctionSupport.Check_Para_And_Get_Para(material, myAll_Data.list_material_para_data[2].material_para_guid, myAll_Data.list_material_para_data[2].material_para_name) == "")
-                    {
-                        myFunctionSupport.SetDataStorage(material, myAll_Data.list_material_para_data[2].material_para_guid, myAll_Data.list_material_para_data[2].material_para_name, myAll_Data.list_unit_value_data[0].ToString());
-                    }
-                    if (myFunctionSupport.Check_Para_And_Get_Para(material, myAll_Data.list_material_para_data[3].material_para_guid, myAll_Data.list_material_para_data[3].material_para_name) == null)
-                    {
-                        myFunctionSupport.SetDataStorage(material, myAll_Data.list_material_para_data[3].material_para_guid, myAll_Data.list_material_para_data[3].material_para_name, "");
-                    }
-                    if (myFunctionSupport.Check_Para_And_Get_Para(material, myAll_Data.list_material_para_data[4].material_para_guid, myAll_Data.list_material_para_data[4].material_para_name) == null)
-                    {
-                        myFunctionSupport.SetDataStorage(material, myAll_Data.list_material_para_data[4].material_para_guid, myAll_Data.list_material_para_data[4].material_para_name, "");
-                    }
-                    myMaterial_Project.Add(new Material_Project()
-                    {
-                        material_project = material,
-                        ma_cong_tac_project = myFunctionSupport.Check_Para_And_Get_Para(material, myAll_Data.list_material_para_data[0].material_para_guid, myAll_Data.list_material_para_data[0].material_para_name),
-                        ten_vat_lieu_project = material.Name,
-                        don_vi_project = myFunctionSupport.Check_Para_And_Get_Para(material, myAll_Data.list_material_para_data[1].material_para_guid, myAll_Data.list_material_para_data[1].material_para_name),
-                        user = myFunctionSupport.Check_Para_And_Get_Para(material, myAll_Data.list_material_para_data[3].material_para_guid, myAll_Data.list_material_para_data[3].material_para_name),
-                        time = myFunctionSupport.Check_Para_And_Get_Para(material, myAll_Data.list_material_para_data[4].material_para_guid, myAll_Data.list_material_para_data[4].material_para_name),
-                        mau_vat_lieu = material.Color,
-                        do_trong_suot_vat_lieu = material.Transparency,
-                        id_surface = material.SurfacePatternId,
-                        mau_surface = material.SurfacePatternColor,
-                        id_cut = material.CutPatternId,
-                        mau_cut = material.CutPatternColor,
-                        ton = Convert.ToDouble(myFunctionSupport.Check_Para_And_Get_Para(material, myAll_Data.list_material_para_data[2].material_para_guid, myAll_Data.list_material_para_data[2].material_para_name)).ToString(),
-                        color = myFunctionSupport.Check_Color(myFunctionSupport.Check_Para_And_Get_Para(material, myAll_Data.list_material_para_data[0].material_para_guid, myAll_Data.list_material_para_data[0].material_para_name), myAll_Data),
-                        color_sort = myFunctionSupport.Check_Color(myFunctionSupport.Check_Para_And_Get_Para(material, myAll_Data.list_material_para_data[0].material_para_guid, myAll_Data.list_material_para_data[0].material_para_name), myAll_Data).ToString()
-                    });
-                }
-                thong_tin_vat_lieu_project.ItemsSource = myMaterial_Project;
+                my_material_project = new ObservableCollection<data_material_project>();
+                F_GetMaterialProject.get_material(doc, my_material_project);
+                thong_tin_vat_lieu_project.ItemsSource = my_material_project;
 
                 CollectionView view = (CollectionView)CollectionViewSource.GetDefaultView(thong_tin_vat_lieu_project.ItemsSource);
                 // sort list view
@@ -242,7 +163,7 @@ namespace SetupTool_MaterialSetup
                 view.SortDescriptions.Add(new SortDescription("ten_vat_lieu_project", ListSortDirection.Ascending));
 
                 // filter list view theo tên vật liệu
-                view.Filter = Filter_ten_vat_lieu;
+                view.Filter = Filter_Project;
             }
             catch (Exception ex)
             {
@@ -250,263 +171,80 @@ namespace SetupTool_MaterialSetup
             }
         }
 
-        //----------------------------------------------------------
-        private bool Filter_ten_vat_lieu(object item)
+        //-----------------------------------------------------------
+        private bool Filter_Project(object item)
         {
-            if (String.IsNullOrEmpty(search_material_project.Text) || search_material_project.Text == "...")
+            if (String.IsNullOrEmpty(search_material_project.Text))
                 return true;
             else
-                return ((item as Material_Project).ma_cong_tac_project.IndexOf(search_material_project.Text, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                    (item as Material_Project).ten_vat_lieu_project.IndexOf(search_material_project.Text, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                    (item as Material_Project).don_vi_project.IndexOf(search_material_project.Text, StringComparison.OrdinalIgnoreCase) >= 0);
+                return ((item as data_material_project).ma_cong_tac_project.IndexOf(search_material_project.Text, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    (item as data_material_project).ten_vat_lieu_project.IndexOf(search_material_project.Text, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    Support.RemoveUnicode((item as data_material_project).ten_vat_lieu_project).IndexOf(search_material_project.Text, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    (item as data_material_project).don_vi_project.IndexOf(search_material_project.Text, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    (item as data_material_project).user.IndexOf(search_material_project.Text, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    (item as data_material_project).time.IndexOf(search_material_project.Text, StringComparison.OrdinalIgnoreCase) >= 0);
         }
 
-        //----------------------------------------------------------
-        private void Search_Material_Project(object sender, TextChangedEventArgs e)
-        {
-            if (search_material_project.Text != "...")
-            {
-                CollectionViewSource.GetDefaultView(thong_tin_vat_lieu_project.ItemsSource).Refresh();
-            }
-        }
-
-        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
-        Color color_Shading = null;
+        //-----------------------------------------------------------
         private void Choose_Color_Shading(object sender, RoutedEventArgs e)
         {
-            color_Shading = myFunctionSupport.Choose_Color(color_shading);
-        }
-        Color color_Surface = null;
-        private void Choose_Color_Surface(object sender, RoutedEventArgs e)
-        {
-            color_Surface = myFunctionSupport.Choose_Color(color_surface);
-        }
-        Color color_Cut = null;
-        private void Choose_Color_Cut(object sender, RoutedEventArgs e)
-        {
-            color_Cut = myFunctionSupport.Choose_Color(color_cut);
+            color_shading.Background = F_ChooseColor.choose_color(color_shading, color_surface, color_cut, colorDialog);
         }
 
-        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
-        FillPatternElement fillPattern_Surface = null;
+        //-----------------------------------------------------------
+        private void Choose_Color_Surface(object sender, RoutedEventArgs e)
+        {
+            color_surface.Background = F_ChooseColor.choose_color(color_shading, color_surface, color_cut, colorDialog);
+        }
+
+        //-----------------------------------------------------------
+        private void Choose_Color_Cut(object sender, RoutedEventArgs e)
+        {
+            color_cut.Background = F_ChooseColor.choose_color(color_shading, color_surface, color_cut, colorDialog);
+        }
+
+        //-----------------------------------------------------------
         private void Choose_Surface(object sender, EventArgs e)
         {
             if (name_surface.SelectedItem != null)
             {
-                Data surface = (Data)name_surface.SelectedItem;
-                fillPattern_Surface = myFunctionSupport.Choose_Fill_Pattern(doc, surface.single_value);
+                data_fill_pattern surface = (data_fill_pattern)name_surface.SelectedItem;
+
             }
         }
-        FillPatternElement fillPattern_Cut = null;
+
         private void Choose_Cut(object sender, EventArgs e)
         {
             if (name_cut.SelectedItem != null)
             {
-                Data cut = (Data)name_cut.SelectedItem;
-                fillPattern_Cut = myFunctionSupport.Choose_Fill_Pattern(doc, cut.single_value);
+                data_fill_pattern cut = (data_fill_pattern)name_cut.SelectedItem;
+
             }
         }
 
-        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
+        //-----------------------------------------------------------
         private void Xem_Thong_Tin_Vat_Lieu(object sender, MouseButtonEventArgs e)
         {
-            Xem_Thong_Tin_Vat_Lieu_Project();
+            F_SelectMaterialProject.select_material(doc, thong_tin_vat_lieu_project, ten_vat_lieu, ma_cong_tac, don_vi, color_shading, color_surface, color_cut, tranparency_bar, ton_value, name_surface, name_cut);
         }
 
         //----------------------------------------------------------
-        public void Xem_Thong_Tin_Vat_Lieu_Project()
-        {
-            try
-            {
-                Material_Project item = (Material_Project)thong_tin_vat_lieu_project.SelectedItem;
-                if (thong_tin_vat_lieu_project.SelectedItem == null)
-                {
-                    thong_tin_vat_lieu_project.Items.Refresh();
-                    Default();
-                }
-                else
-                {
-                    string fillPattern_Surface_name = "None";
-                    FillPatternElement fillPattern_Surface_Check = null;
-                    if (item.id_surface.IntegerValue != -1)
-                    {
-                        fillPattern_Surface_Check = doc.GetElement(item.id_surface) as FillPatternElement;
-                        fillPattern_Surface_name = fillPattern_Surface_Check.GetFillPattern().Name;
-                    }
-
-                    string fillPattern_Cut_name = "None";
-                    FillPatternElement fillPattern_Cut_Check = null;
-                    if (item.id_cut.IntegerValue != -1)
-                    {
-                        fillPattern_Cut_Check = doc.GetElement(item.id_cut) as FillPatternElement;
-                        fillPattern_Cut_name = fillPattern_Cut_Check.GetFillPattern().Name;
-                    }
-
-                    Material material = item.material_project;
-
-                    ten_vat_lieu.Text = item.ten_vat_lieu_project;
-                    ma_cong_tac.Text = item.ma_cong_tac_project;
-                    don_vi.SelectedItem = myData_donvi.Find(x => x.single_value == item.don_vi_project);
-                    color_shading.Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(255, item.mau_vat_lieu.Red, item.mau_vat_lieu.Green, item.mau_vat_lieu.Blue));
-                    color_Shading = material.Color;
-                    tranparency_bar.Value = item.do_trong_suot_vat_lieu;
-                    color_surface.Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(255, item.mau_surface.Red, item.mau_surface.Green, item.mau_surface.Blue));
-                    color_Surface = material.SurfacePatternColor;
-                    name_surface.SelectedItem = myData_fillPattern.Find(x => x.value_image == fillPattern_Surface_name);
-                    fillPattern_Surface = fillPattern_Surface_Check;
-                    color_cut.Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(255, item.mau_cut.Red, item.mau_cut.Green, item.mau_cut.Blue));
-                    color_Cut = material.CutPatternColor;
-                    name_cut.SelectedItem = myData_fillPattern.Find(x => x.value_image == fillPattern_Cut_name);
-                    fillPattern_Cut = fillPattern_Cut_Check;
-
-                    ton_value.Text = myFunctionSupport.Check_Para_And_Get_Para(material, myAll_Data.list_material_para_data[2].material_para_guid, myAll_Data.list_material_para_data[2].material_para_name);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        //----------------------------------------------------------
-        public void Default()
-        {
-            try
-            {
-                ten_vat_lieu.Text = "";
-                ma_cong_tac.Text = "";
-                don_vi.SelectedIndex = 0;
-                color_shading.Background = Brushes.Transparent;
-                color_surface.Background = Brushes.Transparent;
-                color_cut.Background = Brushes.Transparent;
-                tranparency_bar.Value = 0;
-                name_surface.SelectedIndex = 0;
-                name_cut.SelectedIndex = 0;
-            }
-            catch (Exception)
-            {
-
-            }
-        }
-
-        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
-        public void Sua_Thong_Tin_Vat_Lieu(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                myExampleDraw.command = "Modify";
-                Data_for_ExternalEvent();
-                Draw.Raise();
-            }
-            catch (Exception)
-            {
-
-            }
-        }
-
-        //----------------------------------------------------------
-        private void Change_Ton_Kg_Factor(object sender, RoutedEventArgs e)
-        {
-            myExampleDraw.command = "Modify_Ton";
-            Data_for_ExternalEvent();
-            Draw.Raise();
-        }
-        
-        //----------------------------------------------------------
-        private void Cancel_Change_Factor_Ton_Kg(object sender, RoutedEventArgs e)
-        {
-            thong_tin_he_so_vat_lieu_project.Items.Refresh();
-        }
-
-        //----------------------------------------------------------
-        public void Data_for_ExternalEvent()
-        {
-            myExampleDraw.myAll_Data = myAll_Data;
-
-            myExampleDraw.thong_tin_vat_lieu_project = thong_tin_vat_lieu_project;
-            myExampleDraw.ten_vat_lieu = ten_vat_lieu;
-            myExampleDraw.ma_cong_tac = ma_cong_tac;
-            myExampleDraw.don_vi = don_vi;
-            myExampleDraw.use_appearence = use_appearence;
-            myExampleDraw.tranparency_value = tranparency_value;
-            myExampleDraw.color_Shading = color_Shading;
-            myExampleDraw.color_Surface = color_Surface;
-            myExampleDraw.color_Cut = color_Cut;
-            myExampleDraw.fillPattern_Surface = fillPattern_Surface;
-            myExampleDraw.fillPattern_Cut = fillPattern_Cut;
-            myExampleDraw.myMaterial_Project = myMaterial_Project;
-            myExampleDraw.ton_value = ton_value;
-            myExampleDraw.myMaterial_Project_Factor = myMaterial_Project_Factor;
-        }
-
-        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
-        private void Tao_Vat_Lieu_Moi(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                myExampleDraw.command = "Create";
-                Data_for_ExternalEvent();
-                Draw.Raise();
-            }
-            catch (Exception)
-            {
-
-            }
-        }
-
-        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
         private void Xoa_Vat_Lieu(object sender, RoutedEventArgs e)
         {
             try
             {
-                myExampleDraw.command = "Delete";
-                Data_for_ExternalEvent();
-                Draw.Raise();
-            }
-            catch (Exception)
-            {
-
-            }
-        }
-
-        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
-        private void Refresh_All_Du_Lieu(object sender, RoutedEventArgs e)
-        {
-            Refresh();
-        }
-
-        //----------------------------------------------------------
-        public void Refresh()
-        {
-            try
-            {
-                myFunctionSupport.Get_SurfacePatternName_And_CutPatternName(doc, myData_fillPattern, name_cut, name_surface);
-                Show_Infor_Material();
-                Default();
-            }
-            catch (Exception)
-            {
-
-            }
-        }
-
-        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
-        private void Chon_Vat_Lieu_Tu_Company_Database(object sender, RoutedEventArgs e)
-        {
-            Chon_Vat_Lieu();
-        }
-
-        //----------------------------------------------------------
-        public void Chon_Vat_Lieu()
-        {
-            try
-            {
-                UserSourceSQL userSourceSQL = new UserSourceSQL(uiapp, myAll_Data);
-                userSourceSQL.Owner = this;
-                userSourceSQL.ShowDialog();
-                ten_vat_lieu.Text = userSourceSQL.ten_vat_lieu_send;
-                ma_cong_tac.Text = userSourceSQL.ma_cong_tac_send;
-                don_vi.SelectedItem = myData_donvi.Find(x => x.single_value == userSourceSQL.don_vi_send);
+                if (thong_tin_vat_lieu_project.SelectedItems.Count > 0)
+                {
+                    my_delete.thong_tin_vat_lieu_project = thong_tin_vat_lieu_project;
+                    my_delete.my_material_project = my_material_project;
+                    my_delete.my_material_factor = my_material_factor;
+                    my_delete.thong_tin_he_so_vat_lieu_project = thong_tin_he_so_vat_lieu_project;
+                    e_delete.Raise();
+                }
+                else
+                {
+                    MessageBox.Show("Please choose material and delete again!", "ERROR", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
             catch (Exception ex)
             {
@@ -514,6 +252,246 @@ namespace SetupTool_MaterialSetup
             }
         }
 
+        //-----------------------------------------------------------
+        private void Change_Ton_Kg_Factor(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                my_change_factor.thong_tin_vat_lieu_project = thong_tin_vat_lieu_project;
+                my_change_factor.user = user;
+                my_change_factor.my_material_project = my_material_project;
+                my_change_factor.my_material_factor = my_material_factor;
+                my_change_factor.thong_tin_he_so_vat_lieu_project = thong_tin_he_so_vat_lieu_project;
+                e_change_factor.Raise();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
+        //-----------------------------------------------------------
+        private void Cancel_Change_Factor_Ton_Kg(object sender, RoutedEventArgs e)
+        {
+            thong_tin_he_so_vat_lieu_project.Items.Refresh();
+        }
+        #endregion
+
+        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
+        #region Material Company
+        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
+        private void Chon_Vat_Lieu_Tu_Company_Database(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (company.IsChecked == true) project.IsChecked = true;
+                else company.IsChecked = true;
+
+                if (my_material_company.Count() == 0)
+                {
+                    get_material_company();
+                }
+                search();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
+        //----------------------------------------------------------
+        private void get_material_company()
+        {
+            try
+            {
+                my_material_company = new ObservableCollection<data_material_company>();
+                F_GetMaterialCompany.get_material(my_material_company);
+                thong_tin_vat_lieu_company.ItemsSource = my_material_company;
+
+                CollectionView view = (CollectionView)CollectionViewSource.GetDefaultView(thong_tin_vat_lieu_company.ItemsSource);
+                view.SortDescriptions.Add(new SortDescription("ma_cong_tac_company", ListSortDirection.Ascending));
+                view.SortDescriptions.Add(new SortDescription("ten_vat_lieu_company", ListSortDirection.Ascending));
+
+                view.Filter = Filter_Company;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
+        //-----------------------------------------------------------
+        private bool Filter_Company(object item)
+        {
+            if (String.IsNullOrEmpty(search_material_project.Text))
+                return true;
+            else
+                return ((item as data_material_company).ma_cong_tac_company.IndexOf(search_material_project.Text, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    (item as data_material_company).ten_vat_lieu_company.IndexOf(search_material_project.Text, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    Support.RemoveUnicode((item as data_material_company).ten_vat_lieu_company).IndexOf(search_material_project.Text, StringComparison.OrdinalIgnoreCase) >= 0);
+        }
+
+        //----------------------------------------------------------
+        private void Xem_Thong_Tin_Vat_Lieu_Company(object sender, MouseButtonEventArgs e)
+        {
+            try
+            {
+                if (thong_tin_vat_lieu_company.SelectedItem != null)
+                {
+                    data_material_company item = (data_material_company)thong_tin_vat_lieu_company.SelectedItem;
+                    ten_vat_lieu.Text = item.ten_vat_lieu_company;
+                    ma_cong_tac.Text = item.ma_cong_tac_company;
+                    don_vi.Text = item.don_vi_company;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
+        //----------------------------------------------------------
+        private void Xoa_Vat_Lieu_Company(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (thong_tin_vat_lieu_company.SelectedItems.Count > 0)
+                {
+                    string result = F_DeleteMaterialCompany.delete_material(thong_tin_vat_lieu_company, my_material_company);
+                    if (result == "S")
+                    {
+                        thong_tin_vat_lieu_company.Items.Refresh();
+                        MessageBox.Show("Delete Success!", "SUCCESS", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Please choose material and delete again!", "ERROR", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+        #endregion
+
+        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
+        #region Material Template
+        //----------------------------------------------------------
+        private void Chon_Vat_Lieu_Tu_Template_Database(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (template.IsChecked == true) project.IsChecked = true;
+                else template.IsChecked = true;
+
+                if (my_material_template.Count() == 0)
+                {
+                    get_material_template();
+                }
+                search();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+        //----------------------------------------------------------
+        private void get_material_template()
+        {
+            try
+            {
+                my_material_template = new ObservableCollection<data_material_template>();
+                F_GetMaterialTemplate.get_material(my_material_template);
+                thong_tin_vat_lieu_template.ItemsSource = my_material_template;
+
+                CollectionView view = (CollectionView)CollectionViewSource.GetDefaultView(thong_tin_vat_lieu_template.ItemsSource);
+                view.SortDescriptions.Add(new SortDescription("ma_cong_tac_template_MCT", ListSortDirection.Ascending));
+                view.SortDescriptions.Add(new SortDescription("ten_vat_lieu_template_MCT", ListSortDirection.Ascending));
+                view.Filter = Filter_Tempalte;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
+        //-----------------------------------------------------------
+        private bool Filter_Tempalte(object item)
+        {
+            if (String.IsNullOrEmpty(search_material_project.Text))
+                return true;
+            else
+                return ((item as data_material_template).ma_cong_tac_template_MCT.IndexOf(search_material_project.Text, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    (item as data_material_template).ten_vat_lieu_template_MCT.IndexOf(search_material_project.Text, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    Support.RemoveUnicode((item as data_material_template).ten_vat_lieu_template_MCT).IndexOf(search_material_project.Text, StringComparison.OrdinalIgnoreCase) >= 0);
+        }
+
+        //----------------------------------------------------------
+        private void Xem_Thong_Tin_Vat_Lieu_Template(object sender, MouseButtonEventArgs e)
+        {
+            Xem_Thong_Tin_Vat_Lieu();
+        }
+
+        //----------------------------------------------------------
+        public void Xem_Thong_Tin_Vat_Lieu()
+        {
+            try
+            {
+                if (thong_tin_vat_lieu_template.SelectedItem != null)
+                {
+                    data_material_template item = (data_material_template)thong_tin_vat_lieu_template.SelectedItem;
+                    List<Material_Sup_Template> myMaterial_Sub_Template = new List<Material_Sup_Template>();
+                    List<Material_DM_Template> myMaterial_DM_Template = new List<Material_DM_Template>();
+
+                    var list_DM = SQL.SQLRead(Source.path_Quantity, "dbo.spRead_DM", Source.type_Procedure, new List<string>() { "@DBSubId" }, new List<string>() { item.ma_cong_tac_template_MCT_DM });
+                    int rows_DM = list_DM.Rows.Count;
+                    for (var i = 0; i < rows_DM; i++)
+                    {
+                        myMaterial_DM_Template.Add(new Material_DM_Template()
+                        {
+                            so_thu_tu_DM = Convert.ToInt32(list_DM.Rows[i]["STT"].ToString()),
+                            ma_cong_tac_template_MCT_DM = list_DM.Rows[i]["DM_SubId"].ToString(),
+                            ma_cong_tac_template_DM_VL = list_DM.Rows[i]["MaterialCode_DM"].ToString(),
+                            so_luong_template_DM = list_DM.Rows[i]["Amount"].ToString()
+                        });
+                    }
+                    foreach (Material_DM_Template DM in myMaterial_DM_Template)
+                    {
+                        var list_VL = SQL.SQLRead(Source.path_Quantity, "dbo.spRead_VL", Source.type_Procedure, new List<string>() { "@DBMaterialCode_DM" }, new List<string>() { DM.ma_cong_tac_template_DM_VL });
+                        int rows_VL = list_VL.Rows.Count;
+                        if (rows_VL > 0)
+                        {
+                            myMaterial_Sub_Template.Add(new Material_Sup_Template()
+                            {
+                                no_sup_template = DM.so_thu_tu_DM,
+                                ten_vat_lieu_sup_template = list_VL.Rows[0]["MaterialName"].ToString(),
+                                so_luong_sup_template = DM.so_luong_template_DM,
+                                don_vi_sup_template = list_VL.Rows[0]["Unit"].ToString()
+                            });
+                        }
+                    }
+                    thong_tin_vat_lieu_sup_template.ItemsSource = myMaterial_Sub_Template;
+
+                    CollectionView view = (CollectionView)CollectionViewSource.GetDefaultView(thong_tin_vat_lieu_sup_template.ItemsSource);
+                    // sort list view
+                    view.SortDescriptions.Add(new SortDescription("no_sub_template", ListSortDirection.Ascending));
+
+                    ten_vat_lieu.Text = item.ten_vat_lieu_template_MCT;
+                    ma_cong_tac.Text = item.ma_cong_tac_template_MCT;
+                    don_vi.Text = item.don_vi_template_MCT;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+        #endregion
+
+        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
+        #region Material Excel
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------
         private void Tao_Vat_Lieu_Tu_Excel_Database(object sender, RoutedEventArgs e)
         {
@@ -521,65 +499,176 @@ namespace SetupTool_MaterialSetup
         }
 
         //----------------------------------------------------------
-        ObservableCollection<Material_Excel> data_receive_create = new ObservableCollection<Material_Excel>();
-        public string  Tao_Vat_Lieu_Tu_Excel()
+        private void Tao_Vat_Lieu_Tu_Excel()
         {
-            string result = "F";
             try
             {
-                ObservableCollection<Material_Project> data_create = new ObservableCollection<Material_Project>();
-                UserSourceExcel userSourceExcel = new UserSourceExcel(uiapp, myAll_Data);
-                userSourceExcel.Owner = this;
-                userSourceExcel.ShowDialog();
-                data_receive_create = userSourceExcel.data_send_create;
-
-                List<Element> list_material = new FilteredElementCollector(doc).OfClass(typeof(Material)).ToList();
-                foreach (Material_Excel excel in data_receive_create)
+                OpenFileDialog file = new OpenFileDialog();
+                file.Filter = "xlsx files (*.xlsx)|*.xlsx";
+                if (file.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
-                    ElementId fillPattern_Surface_id = new ElementId(-1);
-                    if (myFunctionSupport.Choose_Fill_Pattern(doc, excel.name_surface_excel) != null) fillPattern_Surface_id = myFunctionSupport.Choose_Fill_Pattern(doc, excel.name_surface_excel).Id;
+                    string path = file.FileName;
+                    List<data_material_excel> data_create = new List<data_material_excel>();
+                    F_GetMaterialExcel.get_material(data_create, path, name_surface);
 
-                    ElementId fillPattern_Cut_id = new ElementId(-1);
-                    if (myFunctionSupport.Choose_Fill_Pattern(doc, excel.name_cut_excel) != null) fillPattern_Cut_id = myFunctionSupport.Choose_Fill_Pattern(doc, excel.name_cut_excel).Id;
-
-                    Material material = null;
-                    string ton_check = myAll_Data.list_unit_value_data[0].ToString();
-                    try
-                    {
-                        material = list_material[0] as Material;
-                        ton_check = myFunctionSupport.Check_Para_And_Get_Para(material, myAll_Data.list_material_para_data[2].material_para_guid, myAll_Data.list_material_para_data[2].material_para_name);
-                    }
-                    catch { }
-                    
-
-                    data_create.Add(new Material_Project()
-                    {
-                        material_project = material,
-                        ma_cong_tac_project = excel.ma_cong_tac_excel,
-                        ten_vat_lieu_project = excel.ten_vat_lieu_excel,
-                        don_vi_project = excel.don_vi_excel,
-                        user = uiapp.Application.Username,
-                        time = DateTime.Now.ToString(),
-                        mau_vat_lieu = new Color(excel.mau_vat_lieu_excel.Red, excel.mau_vat_lieu_excel.Green, excel.mau_vat_lieu_excel.Blue),
-                        do_trong_suot_vat_lieu = excel.do_trong_suot_vat_lieu_excel,
-                        id_surface = fillPattern_Surface_id,
-                        mau_surface = new Color(excel.mau_surface_excel.Red, excel.mau_surface_excel.Green, excel.mau_surface_excel.Blue),
-                        id_cut = fillPattern_Cut_id,
-                        mau_cut = new Color(excel.mau_cut_excel.Red, excel.mau_cut_excel.Green, excel.mau_cut_excel.Blue),
-                        ton = ton_check
-                    });
+                    my_create_by_excel.thong_tin_vat_lieu_project = thong_tin_vat_lieu_project;
+                    my_create_by_excel.my_material_project = my_material_project;
+                    my_create_by_excel.my_material_factor = my_material_factor;
+                    my_create_by_excel.thong_tin_he_so_vat_lieu_project = thong_tin_he_so_vat_lieu_project;
+                    my_create_by_excel.data_create = data_create;
+                    my_create_by_excel.user = user;
+                    e_create_by_excel.Raise();
                 }
-                myExampleDraw.command = "Excel";
-                myExampleDraw.myMaterial_Project = myMaterial_Project;
-                myExampleDraw.data_create = data_create;
-                Draw.Raise();
-                result = "S";
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
             }
-            return result;
         }
+
+        //-----------------------------------------------------------
+        private void export_excel_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                SaveFileDialog save = new SaveFileDialog();
+                save.Filter = "xlsx files (*.xlsx)|*.xlsx";
+                if(save.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    string path = save.FileName;
+                    string result = F_ExportExcel.Export_Excel(my_material_project, path, "Material", name_surface);
+                    if(result == "S")
+                    {
+                        MessageBox.Show("Export Success!", "SUCCESS", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+        #endregion
+
+        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
+        #region Material All
+        //-----------------------------------------------------------
+        private void Search_Material_Project(object sender, TextChangedEventArgs e)
+        {
+            search();
+        }
+
+        void search()
+        {
+            if (project.IsChecked == true && my_material_project.Count() > 0) CollectionViewSource.GetDefaultView(thong_tin_vat_lieu_project.ItemsSource).Refresh();
+            if (company.IsChecked == true && my_material_company.Count() > 0) CollectionViewSource.GetDefaultView(thong_tin_vat_lieu_company.ItemsSource).Refresh();
+            if (template.IsChecked == true && my_material_template.Count() > 0) CollectionViewSource.GetDefaultView(thong_tin_vat_lieu_template.ItemsSource).Refresh();
+        }
+
+        //----------------------------------------------------------
+        private void Tao_Vat_Lieu_Moi(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (project.IsChecked == true)
+                {
+                    my_create.thong_tin_vat_lieu_project = thong_tin_vat_lieu_project;
+                    my_create.ten_vat_lieu = ten_vat_lieu;
+                    my_create.ma_cong_tac = ma_cong_tac;
+                    my_create.don_vi = don_vi;
+                    my_create.use_appearence = use_appearence;
+                    my_create.tranparency_value = tranparency_value;
+                    my_create.color_shading = color_shading;
+                    my_create.color_surface = color_surface;
+                    my_create.color_cut = color_cut;
+                    my_create.name_surface = name_surface;
+                    my_create.name_cut = name_cut;
+                    my_create.ton_value = ton_value;
+                    my_create.user = user;
+                    my_create.my_material_project = my_material_project;
+                    my_create.my_material_factor = my_material_factor;
+                    my_create.thong_tin_he_so_vat_lieu_project = thong_tin_he_so_vat_lieu_project;
+                    e_create.Raise();
+                }
+                if(company.IsChecked == true)
+                {
+                    string result = F_AddMaterialCompany.add_material(thong_tin_vat_lieu_company, my_material_company, ten_vat_lieu, ma_cong_tac, don_vi, user);
+                    if (result == "S")
+                    {
+                        thong_tin_vat_lieu_company.Items.Refresh();
+                        MessageBox.Show("Create Success!", "SUCCESS", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                }
+            }
+            catch (Exception)
+            {
+
+            }
+        }
+
+        //----------------------------------------------------------
+        private void Sua_Thong_Tin_Vat_Lieu(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (project.IsChecked == true)
+                {
+                    if (thong_tin_vat_lieu_project.SelectedItem != null)
+                    {
+                        my_update.thong_tin_vat_lieu_project = thong_tin_vat_lieu_project;
+                        my_update.ten_vat_lieu = ten_vat_lieu;
+                        my_update.ma_cong_tac = ma_cong_tac;
+                        my_update.don_vi = don_vi;
+                        my_update.use_appearence = use_appearence;
+                        my_update.tranparency_value = tranparency_value;
+                        my_update.color_shading = color_shading;
+                        my_update.color_surface = color_surface;
+                        my_update.color_cut = color_cut;
+                        my_update.name_surface = name_surface;
+                        my_update.name_cut = name_cut;
+                        my_update.ton_value = ton_value;
+                        my_update.user = user;
+                        my_update.my_material_project = my_material_project;
+                        my_update.my_material_factor = my_material_factor;
+                        my_update.thong_tin_he_so_vat_lieu_project = thong_tin_he_so_vat_lieu_project;
+                        e_update.Raise();
+                    }
+                    else
+                    {
+                        MessageBox.Show("Please choose material and update again!", "ERROR", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+                if (company.IsChecked == true)
+                {
+                    if (thong_tin_vat_lieu_company.SelectedItem != null)
+                    {
+                        string result = F_UpdateMaterialCompany.update_material(thong_tin_vat_lieu_company, my_material_company, ten_vat_lieu, ma_cong_tac, don_vi, user);
+                        if (result == "S")
+                        {
+                            thong_tin_vat_lieu_company.Items.Refresh();
+                            MessageBox.Show("Update Success!", "SUCCESS", MessageBoxButton.OK, MessageBoxImage.Information);
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show("Please choose material and update again!", "ERROR", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+            }
+            catch (Exception)
+            {
+
+            }
+        }
+
+        //----------------------------------------------------------
+        private void Refresh_All_Du_Lieu(object sender, RoutedEventArgs e)
+        {
+            F_GetPattern.get_pattern(doc, name_cut, name_surface);
+            Show_Infor_Material();
+            F_GetFactor.get_material_factor(doc, my_material_factor, thong_tin_he_so_vat_lieu_project);
+        }
+
+        #endregion
     }
 }

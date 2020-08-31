@@ -10,6 +10,7 @@ using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Architecture;
 using Autodesk.Revit.DB.ExtensibleStorage;
+using Autodesk.Revit.DB.Visual;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
 using Tool_CheckUpdateModel.Data;
@@ -42,7 +43,12 @@ namespace Tool_CheckUpdateModel
 
                 //Get_Elevation_Ceilings(doc);
 
-                Change_Data_Material(doc);
+                //Change_Data_Material(doc);
+
+                foreach(Material material in new FilteredElementCollector(doc).OfClass(typeof(Material)).Cast<Material>().ToList())
+                {
+                    SetColorAppearanceAsset(doc, material);
+                }
 
                 tr.Commit();
 
@@ -54,6 +60,47 @@ namespace Tool_CheckUpdateModel
                 return Result.Failed;
             }
             return Result.Succeeded;
+        }
+
+        //----------------------------------------------------------
+        public void SetColorAppearanceAsset(Document doc, Material material)
+        {
+            try
+            {
+                var list = new FilteredElementCollector(doc).OfClass(typeof(AppearanceAssetElement)).ToList();
+                List<string> name = new List<string>();
+                foreach (AppearanceAssetElement e in list)
+                {
+                    name.Add(e.Name);
+                }
+                string newName = "";
+                for (var i = 0; i < 10000000; i++)
+                {
+                    if (name.Any(x => x == material.Name + "(" + i.ToString() + ")") == false)
+                    {
+                        newName = material.Name + "(" + i.ToString() + ")";
+                        break;
+                    }
+                }
+
+                AppearanceAssetElement assetElem = list[0] as AppearanceAssetElement;
+
+                AppearanceAssetElement assetElemNew = assetElem.Duplicate(newName);
+
+                AppearanceAssetEditScope editScope = new AppearanceAssetEditScope(doc);
+                Asset editableAsset = editScope.Start(assetElemNew.Id);
+                AssetPropertyDoubleArray4d genericDiffuseProperty = editableAsset["generic_diffuse"] as AssetPropertyDoubleArray4d;
+                genericDiffuseProperty.SetValueAsColor(material.Color);
+                AssetPropertyDouble genericTransparency = editableAsset["generic_transparency"] as AssetPropertyDouble;
+                genericTransparency.Value = Convert.ToDouble(material.Transparency) / 100;
+
+                editScope.Commit(true);
+                material.AppearanceAssetId = assetElemNew.Id;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         public static string PrintOutRevitUnitInfo(UnitType ut, FormatOptions obj, string indent)

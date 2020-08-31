@@ -26,16 +26,20 @@ namespace ARC_Quatity.Code.FunctionWEB
                 ObservableCollection<data_table_note> my_table_note_support = new ObservableCollection<data_table_note>();
                 for (var i = 0; i < data.Rows.Count; i++)
                 {
-                    if (JsonConvert.DeserializeObject<data_status>(data.Rows[i]["Status"].ToString()).edited == false)
+                    if (data.Rows[i]["MaterialId"].ToString().Contains("."))
                     {
-                        my_table_note_support.Add(new data_table_note()
+                        if (JsonConvert.DeserializeObject<data_status>(data.Rows[i]["Status"].ToString()).open == true)
                         {
-                            block = data.Rows[i]["MaterialBlock"].ToString(),
-                            level = data.Rows[i]["MaterialLevel"].ToString(),
-                            ma_cong_tac = data.Rows[i]["MaterialId"].ToString(),
-                            notes = JsonConvert.DeserializeObject<data_note>(data.Rows[i]["Notes"].ToString()).message,
-                            id = data.Rows[i]["Id"].ToString()
-                        });
+                            my_table_note_support.Add(new data_table_note()
+                            {
+                                block = data.Rows[i]["MaterialBlock"].ToString(),
+                                level = data.Rows[i]["MaterialLevel"].ToString(),
+                                ma_cong_tac = data.Rows[i]["MaterialId"].ToString(),
+                                notes = JsonConvert.DeserializeObject<data_note>(data.Rows[i]["Notes"].ToString()).message,
+                                id = data.Rows[i]["Id"].ToString(),
+                                edited = JsonConvert.DeserializeObject<data_status>(data.Rows[i]["Status"].ToString()).edited
+                            });
+                        }
                     }
                 }
                 my_table_note = new ObservableCollection<data_table_note>(my_table_note_support.GroupBy(x => new
@@ -48,8 +52,9 @@ namespace ARC_Quatity.Code.FunctionWEB
                     block = x.Key.block,
                     level = x.Key.level,
                     ma_cong_tac = x.Key.ma_cong_tac,
-                    notes = string.Join("\n", x.Select(y => y.notes)),
-                    id = string.Join("\n", x.Select(y => y.id))
+                    notes = string.Join("\n",x.Select(y => y.notes)),
+                    ids = x.Select(y => y.id).ToList(),
+                    editeds = x.Select(y => y.edited).ToList()
                 }));
                 thong_tin_quantity_total_web.ItemsSource = my_table_note;
 

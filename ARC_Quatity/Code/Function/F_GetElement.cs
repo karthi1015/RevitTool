@@ -14,7 +14,7 @@ namespace ARC_Quatity.Code.Function
 {
     class F_GetElement
     {
-        //----------------------------------------------------------
+        //doc + my_element_link----------------------------------------------------------
         public static void Get_ELement_Link_Or_NoLink(Document doc, ObservableCollection<data_element_link> my_element_link)
         {
             try
@@ -48,7 +48,7 @@ namespace ARC_Quatity.Code.Function
             }
         }
 
-        //----------------------------------------------------------
+        //uidoc + doc + my_element_link----------------------------------------------------------
         public static void get_element_by_select(UIDocument uidoc, Document doc, ObservableCollection<data_element_link> my_element_link)
         {
             try

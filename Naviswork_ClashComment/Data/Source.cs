@@ -15,6 +15,9 @@ namespace Naviswork_ClashComment
         public static string type_Query = "Query";
         public static string pathUserPassword = @"C:\Users\" + Environment.UserName + "\\AppData\\Roaming\\Pentacons\\User";
 
+        public static string path_FileStream = "Server=18.141.116.111,1433\\SQLEXPRESS;Database=FileStreamDataBase;User Id = FilestreamUser; Password = fileconnect@123";
+        public static string path_WEB = "Server=18.141.116.111,1433\\SQLEXPRESS;Database=WEBDataBase;User Id = WebUser; Password = webconnect456";
+
         public static List<status_data> list_status_child = new List<status_data>() { 
             new status_data() { name = "Comments", color = Brushes.Red, isEnable = true},
             new status_data() { name = "Resolved", color = Brushes.Aqua, isEnable = true},

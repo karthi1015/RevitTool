@@ -26,6 +26,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Naviswork_ClashComment.Data;
 using System.Net;
+using System.Globalization;
 
 namespace Naviswork_ClashComment
 {
@@ -36,9 +37,12 @@ namespace Naviswork_ClashComment
         UIApplication uiapp;
         UIDocument uidoc;
         Document doc;
-        string project_number = "";
         Document doc_file_1;
         Document doc_file_2;
+        string project_number;
+        string block;
+        string Class;
+
 
         E_Focus my_focus;
         ExternalEvent e_focus;
@@ -52,19 +56,96 @@ namespace Naviswork_ClashComment
         #endregion
 
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------
-        public string path = "";
         public UserControl1(UIApplication _uiapp)
         {
             InitializeComponent();
             uiapp = _uiapp;
             uidoc = uiapp.ActiveUIDocument;
             doc = uidoc.Document;
-            project_number = doc.ProjectInformation.Number;
 
             my_focus = new E_Focus();
             e_focus = ExternalEvent.Create(my_focus);
 
-            Get_Data_For_Parent();
+            Function_Dau_Vao();
+        }
+
+        public void Function_Dau_Vao()
+        {
+            try
+            {
+                List<string> file_name = doc.Title.Split('_').ToList();
+                project_number = doc.ProjectInformation.Number;
+                block = doc.ProjectInformation.BuildingName;
+                Class = doc.ProjectInformation.LookupParameter("Class") == null ? "" : doc.ProjectInformation.LookupParameter("Class").AsString();
+                if (string.IsNullOrEmpty(Class)) MessageBox.Show("Share Parameter Class not found", "ERROR", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                if (file_name.Count() > 3)
+                {
+                    List<string> format = new List<string>();
+                    if (project_number != file_name[0]) format.Add("Project Number");
+
+                    if (block != file_name[1]) format.Add("Block");
+
+                    if (Class != file_name[3]) format.Add("Class");
+
+                    if (format.Count() == 0)
+                    {
+                        get_role_check_clash();
+                        Get_Data_For_Parent();
+                    }
+                    else
+                    {
+                        MessageBox.Show(string.Format("Data is incorrect.\nPlease check {0} and try again!", string.Join(",", format)), "ERROR", MessageBoxButton.OK, MessageBoxImage.Error);
+                        this.Close();
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("File name is incorrect. Please check and try again!", "ERROR", MessageBoxButton.OK, MessageBoxImage.Error);
+                    this.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
+        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
+        void get_role_check_clash()
+        {
+            try
+            {
+                string path = Source.pathUserPassword + "\\" + Dns.GetHostAddresses(Dns.GetHostName())[0].ToString();
+                if (File.Exists(path))
+                {
+                    data_information information = JsonConvert.DeserializeObject<data_information>(File.ReadAllText(path));
+                    if (!string.IsNullOrEmpty(information.user_id) && !string.IsNullOrEmpty(information.user_password))
+                    {
+                        List<string> Para2 = new List<string>() { "@DBUserId", "@DBUserPassWord" };
+                        List<string> Para2_Values = new List<string>() { information.user_id, information.user_password };
+                        var listtotal = SQL.SQLRead(Source.path_WEB, "dbo.spRead_Role_By_User", Source.type_Procedure, Para2, Para2_Values);
+                        if (listtotal.Rows.Count > 0)
+                        {
+                            List<data_role_user> my_role_user = JsonConvert.DeserializeObject<List<data_role_user>>(listtotal.Rows[0]["Project"].ToString());
+                            foreach (data_role_user data in my_role_user)
+                            {
+                                if (data.projectNumber == project_number)
+                                {
+                                    if (data.role.Contains("CheckClash"))
+                                    {
+                                        delete_parent.IsEnabled = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -77,7 +158,7 @@ namespace Naviswork_ClashComment
                 {
                     List<string> Para2 = new List<string>() { "@DBProjectNumber" };
                     List<string> Para2_Values = new List<string>() { project_number };
-                    var listtotal = SQL.SQLRead(SQL.path_connect_SQL_FileStream, "dbo.sp_ReadData_FromClashDetective", Source.type_Procedure, Para2, Para2_Values);
+                    var listtotal = SQL.SQLRead(Source.path_FileStream, "dbo.sp_ReadData_FromClashDetective", Source.type_Procedure, Para2, Para2_Values);
                     ObservableCollection<parent> parent_support = new ObservableCollection<parent>();
                     for (var i = 0; i < listtotal.Rows.Count; i++)
                     {
@@ -145,7 +226,6 @@ namespace Naviswork_ClashComment
                         doc_file_1 = docs.First(x => x.Title.Split('.')[0] == file_name_1);
                         doc_file_2 = docs.First(x => x.Title.Split('.')[0] == file_name_2);
                         Get_Data_Clash_Child(item.clash_parent, item.clash_file_name);
-                        get_count_state();
                     }
                 }
             }
@@ -164,97 +244,116 @@ namespace Naviswork_ClashComment
             {
                 my_child = new ObservableCollection<child>();
 
-                List<string> Para2 = new List<string>() { "@DBProjectNumber" };
-                List<string> Para2_Values = new List<string>() { project_number };
-                var listtotal = SQL.SQLRead(SQL.path_connect_SQL_FileStream, "dbo.sp_ReadData_FromClashDetective_ForClash", Source.type_Procedure, Para2, Para2_Values);
+                List<string> Para2 = new List<string>() { "@DBProjectNumber", "@DBFilesName", "@DBDisplayNameParent" };
+                List<string> Para2_Values = new List<string>() { project_number, file_name, clash_parent };
+                var listtotal = SQL.SQLRead(Source.path_FileStream, "dbo.sp_ReadData_FromClashDetective_ForClash", Source.type_Procedure, Para2, Para2_Values);
                 List<string> check_status = new List<string>();
                 for (var i = 0; i < listtotal.Rows.Count; i++)
                 {
-                    if (listtotal.Rows[i]["FilesName"].ToString() == file_name && listtotal.Rows[i]["DisplayNameParent"].ToString() == clash_parent)
+                    status_data status = Source.list_status_child.First(x => x.name == listtotal.Rows[i]["Status"].ToString());
+
+                    string user = "";
+                    string message = "";
+                    List<ImageSource> imageSource = new List<ImageSource>();
+
+                    List<string> id_message = new List<string>();
+                    string Messages = listtotal.Rows[i]["Messages"].ToString();
+                    if (Messages != "null" && !string.IsNullOrEmpty(Messages))
                     {
-                        status_data status = Source.list_status_child.First(x => x.name == listtotal.Rows[i]["Status"].ToString());
-
-                        string user = "";
-                        string message = "";
-                        List<ImageSource> imageSource = new List<ImageSource>();
-
-                        List<string> id_message = new List<string>();
-                        string Messages = listtotal.Rows[i]["Messages"].ToString();
-                        if (Messages != "null" && !string.IsNullOrEmpty(Messages))
+                        List<data_messages> my_data_messages = JsonConvert.DeserializeObject<List<data_messages>>(Messages);
+                        foreach (data_messages data in my_data_messages)
                         {
-                            List<data_messages> my_data_messages = JsonConvert.DeserializeObject<List<data_messages>>(Messages);
-                            foreach (data_messages data in my_data_messages)
+                            if (data.mark == true)
                             {
-                                if (data.mark == true)
+                                if (!string.IsNullOrEmpty(data.message))
                                 {
-                                    if (!string.IsNullOrEmpty(data.message))
-                                    {
-                                        message += "\n" + data.message;
-                                    }
-                                    id_message.Add(data.id);
+                                    message += "\n" + data.message;
+                                }
+                                id_message.Add(data.id);
+                            }
+                        }
+                    }
+
+                    string Attach = listtotal.Rows[i]["Attach"].ToString();
+                    if (Attach != "null" && !string.IsNullOrEmpty(Attach))
+                    {
+                        List<data_attach> my_data_attach = JsonConvert.DeserializeObject<List<data_attach>>(Attach);
+                        foreach (data_attach data in my_data_attach)
+                        {
+                            if (data.messageId == "solution" || string.Join("|", id_message).Contains(data.messageId))
+                            {
+                                foreach (data_image image in data.images)
+                                {
+                                    imageSource.Add(Support.Image_Base64(image.src));
                                 }
                             }
                         }
+                    }
 
-                        string Attach = listtotal.Rows[i]["Attach"].ToString();
-                        if (Attach != "null" && !string.IsNullOrEmpty(Attach))
+                    if (!string.IsNullOrEmpty(listtotal.Rows[i]["CommentBy"].ToString()))
+                    {
+                        var list_data_user = SQL.SQLRead(Source.path_WEB, "dbo.spRead_User", Source.type_Procedure, new List<string>(), new List<string>());
+                        string userId = JsonConvert.DeserializeObject<data_time_comments>(listtotal.Rows[i]["CommentBy"].ToString()).userId;
+                        for (var a = 0; a < list_data_user.Rows.Count; a++)
                         {
-                            List<data_attach> my_data_attach = JsonConvert.DeserializeObject<List<data_attach>>(Attach);
-                            foreach (data_attach data in my_data_attach)
+                            if(list_data_user.Rows[a]["UserId"].ToString() == userId)
                             {
-                                if (data.messageId == "solution" || string.Join("|", id_message).Contains(data.messageId))
-                                {
-                                    foreach (data_image image in data.images)
-                                    {
-                                        imageSource.Add(Support.Image_Base64(image.src));
-                                    }
-                                }
-                            }
-                        }
-
-                        if (!string.IsNullOrEmpty(listtotal.Rows[i]["ApprovedBy"].ToString()))
-                        {
-                            user = JObject.Parse(listtotal.Rows[i]["ApprovedBy"].ToString()).GetValue("userName").ToString();
-                        }
-                        bool isEnable = status.isEnable;
-
-                        string hostName = Dns.GetHostName();
-                        string myIP = Dns.GetHostByName(hostName).AddressList[0].ToString();
-                        path = Source.pathUserPassword + "\\" + myIP;
-                        if (File.Exists(path))
-                        {
-                            var infor = File.ReadAllLines(path).ToList();
-                            string userId = infor[1];
-
-                            List<string> list_userId_assign = new List<string>();
-                            string assign_to = listtotal.Rows[i]["AssignTo"].ToString();
-                            if (assign_to != "null" && !string.IsNullOrEmpty(assign_to))
-                            {
-                                List<data_assign> my_data_assign = JsonConvert.DeserializeObject<List<data_assign>>(assign_to);
-                                foreach (data_assign data in my_data_assign)
-                                {
-                                    list_userId_assign.Add(data.userId);
-                                }
-                            }
-                            if (list_userId_assign.Any(x => x == userId) == false)
-                            {
-                                if (status.name != Source.list_status_child[4].name) isEnable = false;
-                            }
-                            else
-                            {
-                                if (string.IsNullOrEmpty(infor[2])) isEnable = false;
-                            }
-                        }
-                        Func<char, bool> isnumber = ch => char.IsNumber(ch);
-                        int index = 0;
-                        for (int j = 0; j < listtotal.Rows[i]["DisplayNameChild"].ToString().Length; j++)
-                        {
-                            if (isnumber(listtotal.Rows[i]["DisplayNameChild"].ToString()[j]))
-                            {
-                                index = j;
+                                user = list_data_user.Rows[a]["UserName"].ToString();
                                 break;
                             }
                         }
+                    }
+                    bool isEnable = status.isEnable;
+
+                    string hostName = Dns.GetHostName();
+                    string myIP = Dns.GetHostAddresses(hostName)[0].ToString();
+                    string path = Source.pathUserPassword + "\\" + myIP;
+                    if (File.Exists(path))
+                    {
+                        var infor = File.ReadAllLines(path).ToList();
+                        string userId = infor[1];
+
+                        List<string> list_userId_assign = new List<string>();
+                        string assign_to = listtotal.Rows[i]["AssignTo"].ToString();
+                        if (assign_to != "null" && !string.IsNullOrEmpty(assign_to))
+                        {
+                            List<data_assign> my_data_assign = JsonConvert.DeserializeObject<List<data_assign>>(assign_to);
+                            foreach (data_assign data in my_data_assign)
+                            {
+                                list_userId_assign.Add(data.userId);
+                            }
+                        }
+                        if (list_userId_assign.Any(x => x == userId) == false)
+                        {
+                            if (status.name != Source.list_status_child[0].name && status.name != Source.list_status_child[1].name) isEnable = false;
+                        }
+                        else
+                        {
+                            if (string.IsNullOrEmpty(infor[2])) isEnable = false;
+                        }
+                    }
+                    Func<char, bool> isnumber = ch => char.IsNumber(ch);
+                    int index = 0;
+                    for (int j = 0; j < listtotal.Rows[i]["DisplayNameChild"].ToString().Length; j++)
+                    {
+                        if (isnumber(listtotal.Rows[i]["DisplayNameChild"].ToString()[j]))
+                        {
+                            index = j;
+                            break;
+                        }
+                    }
+
+                    bool check_time = false;
+                    string CommentBy = listtotal.Rows[i]["CommentBy"].ToString();
+                    if (CommentBy != "null" && !string.IsNullOrEmpty(CommentBy))
+                    {
+                        string time = JsonConvert.DeserializeObject<data_time_comments>(CommentBy).time;
+                        DateTime dateTime = DateTime.Parse(time, null, DateTimeStyles.RoundtripKind);
+                        DateTime dateCheck = DateTime.Now.AddHours(-1);
+                        if (dateCheck >= dateTime) check_time = true;
+                    }
+                    if(check_time == true)
+                    {
                         my_child.Add(new child()
                         {
                             clash_child_sort = Convert.ToInt32(listtotal.Rows[i]["DisplayNameChild"].ToString().Substring(index)),
@@ -277,19 +376,46 @@ namespace Naviswork_ClashComment
                             isEnable = isEnable
                         });
                     }
-                }
+                    else
+                    {
+                        my_child.Add(new child()
+                        {
+                            clash_child_sort = Convert.ToInt32(listtotal.Rows[i]["DisplayNameChild"].ToString().Substring(index)),
+                            clash_child = listtotal.Rows[i]["DisplayNameChild"].ToString(),
+                            status_child_list = Source.list_status_child,
+                            status_child = status,
+                            location_child = listtotal.Rows[i]["Location"].ToString(),
+                            approved_by_child = user,
+                            solution_child = listtotal.Rows[i]["Solution"].ToString() + message,
 
+                            id1_child = listtotal.Rows[i]["path1ID"].ToString(),
+                            doc1_child = doc_file_1,
+                            id2_child = listtotal.Rows[i]["path2ID"].ToString(),
+                            doc2_child = doc_file_2,
+
+                            id = listtotal.Rows[i]["Id"].ToString(),
+
+                            bitmap = imageSource,
+                            color = status.color,
+                            isEnable = false
+                        });
+                    }
+                }
                 thong_tin_clash_child.ItemsSource = my_child;
 
                 CollectionView view = (CollectionView)CollectionViewSource.GetDefaultView(thong_tin_clash_child.ItemsSource);
                 view.SortDescriptions.Add(new SortDescription("clash_child_sort", ListSortDirection.Ascending));
 
                 view.Filter = Filter_ten_vat_lieu;
+                get_count_state();
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
+                thong_tin_clash_child.ItemsSource = new ObservableCollection<child>();
+                thong_tin_clash_parent.SelectedItem = null;
             }
+            
         }
 
         //----------------------------------------------------------
@@ -333,7 +459,7 @@ namespace Naviswork_ClashComment
                         count = x.Count()
                     }));
                     int count = 0;
-                    if (list.Any(x => x.status == Comments.Name) == false) Comments.Text = Comments.Name + "          " + count; 
+                    if (list.Any(x => x.status == Comments.Name) == false) Comments.Text = Comments.Name + "          " + count;
                     else Comments.Text = Comments.Name + "          " + list.First(x => x.status == Comments.Name).count;
                     if (list.Any(x => x.status == Resolved.Name) == false) Resolved.Text = Resolved.Name + "          " + count;
                     else Resolved.Text = Resolved.Name + "          " + list.First(x => x.status == Resolved.Name).count;
@@ -433,11 +559,11 @@ namespace Naviswork_ClashComment
                 {
                     foreach (child item in my_child)
                     {
-                        if (item.status_child.name != Source.list_status_child[2].name && item.status_child.name != Source.list_status_child[3].name && item.status_child.name != Source.list_status_child[4].name)
+                        if (item.isEnable == true)
                         {
                             List<string> Para = new List<string>() { "@DBProjectNumber", "@DBId", "@DBStatus" };
                             List<string> Para_Values = new List<string>() { doc.ProjectInformation.Number, item.id, item.status_child.name };
-                            result.Add(SQL.SQLWrite(SQL.path_connect_SQL_FileStream, "dbo.sp_update_clash_status", Source.type_Procedure, Para, Para_Values));
+                            result.Add(SQL.SQLWrite(Source.path_FileStream, "dbo.sp_update_clash_status", Source.type_Procedure, Para, Para_Values));
                         }
                     }
                     if (result.Any(x => x == "F") == false) MessageBox.Show("Update success!", "SUCCESS", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -453,6 +579,34 @@ namespace Naviswork_ClashComment
         private void Refresh_View(object sender, RoutedEventArgs e)
         {
 
+        }
+
+        //--------------------------------------------------------------------------------------------------------------------------------------------------------------
+        private void delete_clash_parent_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (thong_tin_clash_parent.SelectedItem != null)
+                {
+                    var result_message = MessageBox.Show("Are you sure! This process cannot be undone", "QUESTION", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                    if (result_message == MessageBoxResult.Yes)
+                    {
+                        parent item = (parent)thong_tin_clash_parent.SelectedItem;
+                        List<string> Para2 = new List<string>() { "@DBProjectNumber", "@DBDisplayNameParent", "@DBFilesName" };
+                        List<string> Para2_Values = new List<string>() { project_number, item.clash_parent, item.clash_file_name };
+                        var result = SQL.SQLWrite(Source.path_FileStream, "dbo.sp_Delete_FromClashDetective_By_FilesName_And_NameParent", Source.type_Procedure, Para2, Para2_Values);
+                        if (result == "S")
+                        {
+                            MessageBox.Show("Delete success!", "SUCCESS", MessageBoxButton.OK, MessageBoxImage.Information);
+                            Get_Data_For_Parent();
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
     }
 }

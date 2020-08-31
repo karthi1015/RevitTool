@@ -1,6 +1,8 @@
 ﻿using Microsoft.Win32;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -15,125 +17,131 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using UI_Ribbon.Data;
+using UI_Ribbon.Data.Binding;
 
 namespace UI_Ribbon
 {
+    /// <summary>
+    /// Interaction logic for MainWindow.xaml
+    /// </summary>
     public partial class UserControl1 : Window
     {
-        string pathUserPassword = @"C:\Users\" + Environment.UserName + "\\AppData\\Roaming\\Pentacons\\User";
-
-        FunctionSQL mySQL;
-        FunctionSupoort myFunctionSupport;
-        ListSource mySource;
-
-        string path = "";
-
         public UserControl1()
         {
             InitializeComponent();
-            mySQL = new FunctionSQL();
-            myFunctionSupport = new FunctionSupoort();
-            mySource = new ListSource();
 
-            var listtotal = mySQL.SQLRead(@"Server=18.141.116.111,1433\SQLEXPRESS;Database=ManageDataBase;User Id=ManageUser; Password = manage@connect789", "Select * from dbo.PathSource", "Query", new List<string>(), new List<string>());
-            path_data = listtotal.Rows[0][1].ToString();
-            Function_TXT();
-
-            string hostName = Dns.GetHostName();
-            string myIP = Dns.GetHostByName(hostName).AddressList[0].ToString();
-            path = pathUserPassword + "\\" + myIP;
-
-            if (Directory.Exists(pathUserPassword) == false) Directory.CreateDirectory(pathUserPassword);
-
-            if (File.Exists(path))
-            {
-                var infor = File.ReadAllLines(path).ToList();
-                File.Delete(path);
-                List<string> listUser = new List<string>() { infor[0], infor[1] };
-                File.WriteAllLines(path, listUser);
-
-                user.Text = infor[0];
-            }
+            Logout();
         }
 
         //----------------------------------------------------------
-        public string path_data = "";
-        public All_Data myAll_Data { get; set; }
-        public void Function_TXT()
-        {
-            try
-            {
-                myAll_Data = myFunctionSupport.Get_Data_All(path_data);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        public string Login()
+        string path = "";
+        public string Logout()
         {
             string result = "F";
             try
             {
-                if (user.Text != "" && password.Password != "")
+                string myIP = Dns.GetHostAddresses(Dns.GetHostName()).First(x => x.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork).ToString();
+                path = Source.pathUserPassword + "\\" + myIP;
+
+                if (Directory.Exists(Source.pathUserPassword) == false) Directory.CreateDirectory(Source.pathUserPassword);
+
+                if (File.Exists(path))
                 {
-                    List<string> UserId = new List<string>();
-                    List<string> UserName = new List<string>();
-                    List<string> Password = new List<string>();
-                    List<string> SystemRole = new List<string>();
-
-                    var listDataUser = mySQL.SQLRead(myAll_Data.list_path_connect_SQL_data[1], "dbo.spRead_User", mySource.type_Query, new List<string>(), new List<string>());
-                    for (var i = 0; i < listDataUser.Rows.Count; i++)
+                    data_information data = JsonConvert.DeserializeObject<data_information>(File.ReadAllText(path));
+                    File.Delete(path);
+                    data_information listUser = new data_information()
                     {
-                        if (!string.IsNullOrEmpty(listDataUser.Rows[i]["SystemRole"].ToString()))
-                        {
-                            UserId.Add(listDataUser.Rows[i]["UserId"].ToString());
-                            UserName.Add(listDataUser.Rows[i]["UserName"].ToString());
-                            Password.Add(listDataUser.Rows[i]["UserPassWord"].ToString());
-                            SystemRole.Add(listDataUser.Rows[i]["SystemRole"].ToString());
-                        }
-                    }
+                        user_name = data.user_name,
+                        user_id = data.user_id
+                    };
+                    File.WriteAllText(path, JsonConvert.SerializeObject(listUser));
 
-                    for (var i = 0; i < UserName.Count; i++)
-                    {
-                        if (UserName[i] == user.Text && BCrypt.Net.BCrypt.Verify(password.Password, Password[i]) == true)
-                        {
-
-                            List<string> listUser = new List<string>() { UserName[i], UserId[i], Password[i] };
-                            File.WriteAllLines(path, listUser);
-
-                            result = "S";
-                        }
-                    }
+                    user.Text = data.user_name;
+                    result = "S";
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
+                File.Delete(path);
             }
             return result;
+        }
+
+        string result = "F";
+        public void Login()
+        {
+            try
+            {
+                if (user.Text != "" && password.Password != "")
+                {
+                    List<data_information> data = new List<data_information>();
+                    var listDataUser = SQL.SQLRead(Source.path_WEB, "dbo.spRead_User", Source.type_Query, new List<string>(), new List<string>());
+                    for (var i = 0; i < listDataUser.Rows.Count; i++)
+                    {
+                        if (!string.IsNullOrEmpty(listDataUser.Rows[i]["SystemRole"].ToString()))
+                        {
+                            data.Add(new data_information()
+                            {
+                                user_name = listDataUser.Rows[i]["UserName"].ToString(),
+                                user_id = listDataUser.Rows[i]["UserId"].ToString(),
+                                user_password = listDataUser.Rows[i]["UserPassWord"].ToString(),
+                                role = listDataUser.Rows[i]["SystemRole"].ToString()
+                            });
+                        }
+                    }
+
+                    List<data_role> role = new List<data_role>();
+                    var listDataRole = SQL.SQLRead(Source.path_Manage, "dbo.sp_ReadData_RoleManage", Source.type_Query, new List<string>(), new List<string>());
+                    for (var i = 0; i < listDataRole.Rows.Count; i++)
+                    {
+                        role.Add(new data_role()
+                        {
+                            role = listDataRole.Rows[i]["Role"].ToString(),
+                            addin = listDataRole.Rows[i]["Addin"].ToString()
+                        });
+                    }
+
+                    //var xx = data.Select(x => x.role).Intersect(role.Select(x => x.role));
+
+                    var infor = data.Where(x => x.user_name == user.Text && BCrypt.Net.BCrypt.Verify(password.Password, x.user_password) == true).ToList();
+                    if (infor.Count() == 1)
+                    {
+                        File.WriteAllText(path, JsonConvert.SerializeObject(infor.First()));
+                        result = "S";
+                    }
+                    else if (infor.Count() == 0)
+                    {
+                        message.Text = Source.fail_incorrect;
+                    }
+                }
+                else
+                {
+                    message.Text = Source.fail_empty;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+                result = "F";
+            }
         }
 
         private void Login_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                string result = Login();
+                Login();
+                visible_message.Visibility = Visibility.Visible;
                 if (result == "S")
                 {
-                    MessageBox.Show("Login success!!!");
-                    this.Close();
-                }
-                else
-                {
-                    MessageBox.Show("User or password not exist!!!");
+                    message.Text = Source.success;
                 }
             }
             catch (Exception)
             {
 
-                throw;
             }
         }
 
@@ -141,24 +149,19 @@ namespace UI_Ribbon
         {
             if (e.Key == Key.Enter)
             {
-                string result = Login();
+                Login();
+                visible_message.Visibility = Visibility.Visible;
                 if (result == "S")
                 {
-                    MessageBox.Show("Login success!!!");
-                    this.Close();
-                }
-                else
-                {
-                    MessageBox.Show("User or password not exist!!!");
+                    message.Text = Source.success;
                 }
                 e.Handled = true;
             }
-            pass.Text = password.Password;
         }
 
-        private void Exit_Click(object sender, RoutedEventArgs e)
+        private void closeWindow(object sender, RoutedEventArgs e)
         {
-            Close();
+            this.Close();
         }
 
         private void Window_MouseDown(object sender, MouseButtonEventArgs e)
@@ -169,16 +172,38 @@ namespace UI_Ribbon
             }
         }
 
-        private void ViewPassword_Click(object sender, MouseButtonEventArgs e)
+        private void Window_TrayLeftMouseUp(object sender, RoutedEventArgs e)
         {
-            password.Visibility = Visibility.Hidden;
-            pass.Visibility = Visibility.Visible;
+            this.Show();
         }
 
-        private void HiddenPassword_Click(object sender, MouseButtonEventArgs e)
+        private void Exit_Click(object sender, RoutedEventArgs e)
         {
-            password.Visibility = Visibility.Visible;
-            pass.Visibility = Visibility.Hidden;
+            string result = Logout();
+            if (result == "S")
+            {
+                MessageBox.Show("You have been successfully logged out!!!", "SUCCESS", MessageBoxButton.OK, MessageBoxImage.None);
+            }
+        }
+
+        private void show_password(object sender, RoutedEventArgs e)
+        {
+            pass_support.Content = password.Password;
+        }
+
+        private void visible_message_Click(object sender, RoutedEventArgs e)
+        {
+            visible_message.Visibility = Visibility.Collapsed;
+            if (result == "S")
+            {
+                this.Hide();
+                password.Password = "";
+            }
+        }
+
+        private void open_web_Click(object sender, RoutedEventArgs e)
+        {
+            Process.Start("http://18.141.116.111/home/login");
         }
     }
 }

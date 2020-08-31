@@ -42,10 +42,6 @@
     <StartProgram>$(ProgramW6432)\Autodesk\Revit 2019\Revit.exe</StartProgram>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="BCrypt.Net-Core, Version=1.6.0.0, Culture=neutral, PublicKeyToken=4d63bfbfdfd3c6e4, processorArchitecture=MSIL">
-      <HintPath>..\packages\BCrypt.Net-Core.1.6.0\lib\net452\BCrypt.Net-Core.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="LiveCharts, Version=0.9.7.0, Culture=neutral, PublicKeyToken=0bc1f845d1ebb8df, processorArchitecture=MSIL">
       <HintPath>..\packages\LiveCharts.0.9.7\lib\net45\LiveCharts.dll</HintPath>
       <Private>True</Private>
@@ -92,24 +88,32 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ARC_Quatity.cs" />
+    <Compile Include="Code\FunctionQuantityInput\F_DataDefault.cs" />
+    <Compile Include="Code\FunctionQuantityInput\F_EditDataInput.cs" />
+    <Compile Include="Code\FunctionQuantityInput\F_Material.cs" />
+    <Compile Include="Code\FunctionQuantityInput\F_SaveData.cs" />
     <Compile Include="Code\FunctionWEB\F_QuantityNotes.cs" />
     <Compile Include="Code\Function\F_Chart.cs" />
     <Compile Include="Code\Function\F_GetElement.cs" />
     <Compile Include="Code\Function\F_GetSchema.cs" />
     <Compile Include="Code\Function\F_GetMaterial.cs" />
     <Compile Include="Code\Function\F_GetQuantity.cs" />
+    <Compile Include="Code\Function\F_GetUnits.cs" />
     <Compile Include="Code\Function\F_Upload.cs" />
+    <Compile Include="Code\Function\F_UploadData.cs" />
     <Compile Include="Data\BindingWEB\B_DataNotes.cs" />
+    <Compile Include="Data\BindingWEB\B_Login.cs" />
     <Compile Include="Data\BindingWEB\B_Notes.cs" />
     <Compile Include="Data\BindingWEB\B_Status.cs" />
     <Compile Include="Data\Binding\B_Descipline.cs" />
     <Compile Include="Data\Binding\B_ElementLink.cs" />
     <Compile Include="Data\Binding\B_FileLink.cs" />
+    <Compile Include="Data\Binding\B_Material.cs" />
     <Compile Include="Data\Binding\B_Quantity.cs" />
     <Compile Include="Data\Binding\B_Unit.cs" />
-    <Compile Include="Code\Convert.cs" />
+    <Compile Include="Data\Convert.cs" />
     <Compile Include="Data\Source.cs" />
-    <Compile Include="Code\E_VisibleLink.cs" />
+    <Compile Include="Code\External\E_VisibleLink.cs" />
     <Compile Include="Code\SQL.cs" />
     <Compile Include="Code\Support.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
